@@ -85,6 +85,7 @@ public class WebRtcClient {
             Log.d(TAG,"AddIceCandidateCommand");
             PeerConnection pc = peers.get(peerId).pc;
             if (pc.getRemoteDescription() != null) {
+
                 IceCandidate candidate = new IceCandidate(
                         payload.getString("id"),
                         payload.getInt("label"),
@@ -267,26 +268,30 @@ public class WebRtcClient {
     public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params, EGLContext mEGLcontext) {
         mListener = listener;
         pcParams = params;
+
+
         PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
                 params.videoCodecHwAcceleration, mEGLcontext);
         factory = new PeerConnectionFactory();
         MessageHandler messageHandler = new MessageHandler();
 
-        try {
-            client = IO.socket(host);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        client.on("id", messageHandler.onId);
-        client.on("message", messageHandler.onMessage);
-        client.connect();
+//        try {
+//            client = IO.socket(host);
+//        } catch (URISyntaxException e) {
+//            e.printStackTrace();
+//        }
+//        client.on("id", messageHandler.onId);
+//        client.on("message", messageHandler.onMessage);
+//        client.connect();
 
-        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121"));
+//        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121"));
         iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
 
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
         pcConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
+
+        start("test");
     }
 
     /**
@@ -331,13 +336,13 @@ public class WebRtcClient {
      */
     public void start(String name){
         setCamera();
-        try {
-            JSONObject message = new JSONObject();
-            message.put("name", name);
-            client.emit("readyToStream", message);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            JSONObject message = new JSONObject();
+//            message.put("name", name);
+//            client.emit("readyToStream", message);
+//        } catch (JSONException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private void setCamera(){

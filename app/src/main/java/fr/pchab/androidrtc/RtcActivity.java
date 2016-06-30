@@ -17,6 +17,8 @@ import fr.pchab.webrtcclient.PeerConnectionParameters;
 
 import java.util.List;
 
+//이걸 서비스로
+
 public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
     private final static int VIDEO_CALL_SENT = 666;
     private static final String VIDEO_CODEC_VP9 = "VP9";
@@ -48,12 +50,17 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+        //풀스크린 , 스크린 유지 , keyguard dismiss , Lock , TURN SCREN
+
         getWindow().addFlags(
                 LayoutParams.FLAG_FULLSCREEN
                         | LayoutParams.FLAG_KEEP_SCREEN_ON
                         | LayoutParams.FLAG_DISMISS_KEYGUARD
                         | LayoutParams.FLAG_SHOW_WHEN_LOCKED
                         | LayoutParams.FLAG_TURN_SCREEN_ON);
+
+
         setContentView(R.layout.main);
         mSocketAddress = "http://" + getResources().getString(R.string.host);
         mSocketAddress += (":" + getResources().getString(R.string.port) + "/");
@@ -90,6 +97,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
         getWindowManager().getDefaultDisplay().getSize(displaySize);
         PeerConnectionParameters params = new PeerConnectionParameters(
                 true, false, displaySize.x, displaySize.y, 30, 1, VIDEO_CODEC_VP9, true, 1, AUDIO_CODEC_OPUS, true);
+
 
         client = new WebRtcClient(this, mSocketAddress, params, VideoRendererGui.getEGLContext());
     }
