@@ -22,5 +22,9 @@ android {
 dependencies {
     compile 'com.android.support:appcompat-v7:22.0.0'
     compile project(':webrtc-client')
+
+    compile('org.eclipse.paho:org.eclipse.paho.android.service:1.0.2') {
+        exclude module: 'support-v4'
+    }
 }
 

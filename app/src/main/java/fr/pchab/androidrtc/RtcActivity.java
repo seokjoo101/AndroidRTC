@@ -5,9 +5,15 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager.LayoutParams;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
+
+import org.eclipse.paho.android.service.MqttService;
 import org.json.JSONException;
 import org.webrtc.MediaStream;
 import org.webrtc.VideoRenderer;
@@ -46,13 +52,48 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
     private String mSocketAddress;
     private String callerId;
 
+    private static final String TAG = "seok";
+
+
+
+    Intent serviceIntent;
+
+    EditText to;
+    EditText from;
+    Button bFromsend;
+    Button bTosend;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(R.layout.main);
+
+        from=(EditText)findViewById(R.id.from);
+        to=(EditText)findViewById(R.id.to);
+
+        bFromsend=(Button)findViewById(R.id.fromsend);
+        bTosend=(Button) findViewById(R.id.tosend);
+
+        bFromsend.setOnClickListener(new View.OnClickListener() {
+            //topic 으로 regit.(subscribe)
+            public void onClick(View v) {
+                subscribe_topic(from.getText().toString());
+
+            }
+        });
+
+        bTosend.setOnClickListener(new View.OnClickListener() {
+            //topic 으로 regit.(subscribe)
+            public void onClick(View v) {
+                ServiceMqtt.getInstance().publish(to.getText().toString(),"test00");
+
+            }
+        });
+
+
 
         //풀스크린 , 스크린 유지 , keyguard dismiss , Lock , TURN SCREN
-
         getWindow().addFlags(
                 LayoutParams.FLAG_FULLSCREEN
                         | LayoutParams.FLAG_KEEP_SCREEN_ON
@@ -61,7 +102,6 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
                         | LayoutParams.FLAG_TURN_SCREEN_ON);
 
 
-        setContentView(R.layout.main);
         mSocketAddress = "http://" + getResources().getString(R.string.host);
         mSocketAddress += (":" + getResources().getString(R.string.port) + "/");
 
@@ -90,6 +130,15 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
             final List<String> segments = intent.getData().getPathSegments();
             callerId = segments.get(0);
         }
+
+
+        /*★*/
+        mMqttLIstener = new ServiceMqtt.MqttLIstener() {
+            @Override
+            public void getMessage(String msg) {
+                Log.i(TAG, "MSG : " + msg);
+            }
+        };
     }
 
     private void init() {
@@ -119,13 +168,14 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
             client.onResume();
         }
     }
-
     @Override
     public void onDestroy() {
         if(client != null) {
             client.onDestroy();
         }
         super.onDestroy();
+        this.stopService(serviceIntent);
+
     }
 
     @Override
@@ -203,4 +253,18 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
                 scalingType);
     }
+
+    private ServiceMqtt.MqttLIstener mMqttLIstener;
+
+
+    public void subscribe_topic(String sub_topic) {
+        serviceIntent = new Intent(this,ServiceMqtt.getInstance().getClass());
+        serviceIntent.putExtra("subtopic", sub_topic);
+        this.startService(serviceIntent);
+        ServiceMqtt.getInstance().setListener(mMqttLIstener);
+        // MQTT 서비스 subtopic과 함께 connect
+
+    }
+
+
 }

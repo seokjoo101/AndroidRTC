@@ -26,6 +26,7 @@ public class WebRtcClient {
     private MediaStream localMS;
     private VideoSource videoSource;
     private RtcListener mListener;
+
     private Socket client;
 
     /**
@@ -109,7 +110,8 @@ public class WebRtcClient {
         message.put("to", to);
         message.put("type", type);
         message.put("payload", payload);
-        client.emit("message", message);
+        //이부분에서 MQTT로 보내면 될 것 같다.
+//        client.emit("message", message);
     }
 
     private class MessageHandler {
@@ -133,6 +135,7 @@ public class WebRtcClient {
                     JSONObject payload = null;
                     if(!type.equals("init")) {
                         payload = data.getJSONObject("payload");
+
                     }
                     // if peer is unknown, try to add him
                     if(!peers.containsKey(from)) {
@@ -207,9 +210,10 @@ public class WebRtcClient {
         public void onIceCandidate(final IceCandidate candidate) {
             try {
                 JSONObject payload = new JSONObject();
-                payload.put("label", candidate.sdpMLineIndex);
-                payload.put("id", candidate.sdpMid);
-                payload.put("candidate", candidate.sdp);
+                payload.put("label", candidate.sdpMLineIndex); //int
+                payload.put("id", candidate.sdpMid); //String
+                payload.put("candidate", candidate.sdp); //String
+
                 sendMessage(id, "candidate", payload);
             } catch (JSONException e) {
                 e.printStackTrace();
