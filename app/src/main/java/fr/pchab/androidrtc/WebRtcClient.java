@@ -87,6 +87,7 @@ public class WebRtcClient {
 
     }
 
+
     public static WebRtcClient getmInstance(){
         if(mInstance!=null) {
             Log.i(Global.TAG , "NOT NULL");
@@ -103,7 +104,11 @@ public class WebRtcClient {
      }
 
     public void call(String to){
-        peer.pc.createOffer(peer,pcConstraints);
+        try {
+            new CreateOfferCommand().execute(null);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -170,10 +175,13 @@ public class WebRtcClient {
 
             if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("offer")){
                 Log.i(Global.TAG , "OFFER : " + json.getString("sdp"));
+                new CreateAnswerCommand().execute(json);
             }else if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("answer")){
+                new SetRemoteSDPCommand().execute(json);
                 Log.i(Global.TAG , "answer : " + json.getString("sdp"));
             }else if (!json.isNull("type") && json.getString("tpye").equalsIgnoreCase("candidate")){
                 Log.i(Global.TAG , "candidate : " + json.getString("candidate"));
+                new AddIceCandidateCommand().execute(json);
             }
         }
         } catch (JSONException e) {
@@ -226,19 +234,20 @@ public class WebRtcClient {
     }
 
     private interface Command{
-        void execute(String peerId, JSONObject payload) throws JSONException;
+        void execute( JSONObject payload) throws JSONException;
     }
 
     private class CreateOfferCommand implements Command{
-        public void execute(String peerId, JSONObject payload) throws JSONException {
+        public void execute( JSONObject payload) throws JSONException {
             Log.i(TAG,"CreateOfferCommand");
+
 
             peer.pc.createOffer(peer, pcConstraints);
         }
     }
 
     private class CreateAnswerCommand implements Command{
-        public void execute(String peerId, JSONObject payload) throws JSONException {
+        public void execute( JSONObject payload) throws JSONException {
             Log.i(TAG,"CreateAnswerCommand");
 
             SessionDescription sdp = new SessionDescription(
@@ -251,7 +260,7 @@ public class WebRtcClient {
     }
 
     private class SetRemoteSDPCommand implements Command{
-        public void execute(String peerId, JSONObject payload) throws JSONException {
+        public void execute( JSONObject payload) throws JSONException {
             Log.d(TAG,"SetRemoteSDPCommand");
 
             SessionDescription sdp = new SessionDescription(
@@ -263,7 +272,7 @@ public class WebRtcClient {
     }
 
     private class AddIceCandidateCommand implements Command{
-        public void execute(String peerId, JSONObject payload) throws JSONException {
+        public void execute( JSONObject payload) throws JSONException {
             Log.i(TAG,"AddIceCandidateCommand");
             PeerConnection pc = peer.pc;
             if (pc.getRemoteDescription() != null) {

@@ -183,7 +183,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
             client.onDestroy();
         }
         super.onDestroy();
-        this.stopService(serviceIntent);
+//        this.stopService(serviceIntent);
 
     }
 

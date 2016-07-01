@@ -6,6 +6,6 @@ package fr.pchab.androidrtc;
 public class Global {
     public static final String TAG = "AndroidRTC";
     public static String Mytopic;
-    public static String ToTopic;
+    public static String ToTopic ="abcd";
 
 }

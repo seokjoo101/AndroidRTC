@@ -178,7 +178,8 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         Log.i(TAG,"Arrived Topic  " + topic);
         Log.i(TAG,"Arrived Message  " + message.toString());
-        WebRtcClient.getmInstance().getMessage(message.toString());
+        if(WebRtcClient.getmInstance()!=null)
+            WebRtcClient.getmInstance().getMessage(message.toString());
 //        mListener.getMessage(message.toString());
     }
 
