@@ -23,6 +23,8 @@ dependencies {
     compile 'com.android.support:appcompat-v7:22.0.0'
     compile project(':webrtc-client')
 
+    compile 'com.github.nkzawa:socket.io-client:0.4.2'
+    compile 'io.pristine:libjingle:8871@aar'
     compile('org.eclipse.paho:org.eclipse.paho.android.service:1.0.2') {
         exclude module: 'support-v4'
     }

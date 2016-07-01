@@ -1,7 +1,6 @@
 package fr.pchab.androidrtc;
 
 import android.app.Activity;
-import android.app.Service;
 import android.content.Intent;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
@@ -14,14 +13,10 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import org.eclipse.paho.android.service.MqttService;
-import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.json.JSONException;
 import org.webrtc.MediaStream;
 import org.webrtc.VideoRenderer;
 import org.webrtc.VideoRendererGui;
-import fr.pchab.webrtcclient.WebRtcClient;
-import fr.pchab.webrtcclient.PeerConnectionParameters;
 
 import java.util.List;
 
@@ -71,6 +66,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.main);
 
+
         from=(EditText)findViewById(R.id.from);
         to=(EditText)findViewById(R.id.to);
 
@@ -82,8 +78,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
             public void onClick(View v) {
                 subscribe_topic(from.getText().toString());
 
-
-            }
+             }
         });
 
         bTosend.setOnClickListener(new View.OnClickListener() {
@@ -93,6 +88,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
 
             }
         });
+
 
 
 
@@ -108,12 +104,14 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
         mSocketAddress = "http://" + getResources().getString(R.string.host);
         mSocketAddress += (":" + getResources().getString(R.string.port) + "/");
 
+
         vsv = (GLSurfaceView) findViewById(R.id.glview_call);
         vsv.setPreserveEGLContextOnPause(true);
         vsv.setKeepScreenOn(true);
         VideoRendererGui.setView(vsv, new Runnable() {
             @Override
             public void run() {
+                Log.i(TAG,"init");
                 init();
             }
         });
@@ -267,8 +265,11 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
         serviceIntent = new Intent(this,ServiceMqtt.getInstance().getClass());
         serviceIntent.putExtra("subtopic", sub_topic);
         this.startService(serviceIntent);
+        Global.Mytopic=sub_topic;
         ServiceMqtt.getInstance().setListener(mMqttLIstener);
         // MQTT 서비스 subtopic과 함께 connect
+
+
 
     }
 
