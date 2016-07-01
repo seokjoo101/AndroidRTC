@@ -25,6 +25,14 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     public MqttLIstener mListener;
 
 
+    MqttClient sampleClient;
+
+    String broker;
+    String clientId;
+
+    MemoryPersistence persistence = new MemoryPersistence();
+
+
     //싱글톤
     public static ServiceMqtt getInstance(){
         if(mInstance!=null)
@@ -34,16 +42,10 @@ public class ServiceMqtt extends Service  implements MqttCallback {
         }
     }
 
+
     public void setListener(MqttLIstener listener){
         mListener = listener;
     }
-
-    MqttClient sampleClient;
-
-    String broker;
-    String clientId;
-
-    MemoryPersistence persistence = new MemoryPersistence();
 
     //getmessage 콜백
     public interface MqttLIstener {
@@ -58,7 +60,7 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     @Override
     public IBinder onBind(Intent intent) {
 
-        return null;
+         return null;
     }
 
 

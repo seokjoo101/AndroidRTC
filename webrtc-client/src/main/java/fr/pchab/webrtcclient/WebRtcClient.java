@@ -28,7 +28,9 @@ public class WebRtcClient {
     private MediaStream localMS;
     private VideoSource videoSource;
     private RtcListener mListener;
-    private Socket client;
+
+    private Socket client; //ServiceMqtt 의 sampleClient 로 바꿔야함
+
 
 
     /**
@@ -49,6 +51,9 @@ public class WebRtcClient {
     private interface Command{
         void execute(String peerId, JSONObject payload) throws JSONException;
     }
+
+
+
 
     private class CreateOfferCommand implements Command{
         public void execute(String peerId, JSONObject payload) throws JSONException {
@@ -108,15 +113,60 @@ public class WebRtcClient {
      * @throws JSONException
      */
 
+    // Offer to - 자기전화번호 ,"offer", sdp.description
+    //Candidate to - 자기전화번호 ,"candidate ", candidate
+    // Answer to - 상대방전화번호 , "answer" , sdp.description
+
     public void sendMessage(String to, String type, JSONObject payload) throws JSONException {
         JSONObject message = new JSONObject();
         message.put("to", to);
         message.put("type", type);
         message.put("payload", payload);
 
+
         //이부분에서 MQTT로 Publish?
 //        client.emit("message", message);
     }
+
+
+    public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params, EGLContext mEGLcontext) {
+        mListener = listener;
+        pcParams = params;
+
+
+        PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
+                params.videoCodecHwAcceleration, mEGLcontext);
+        factory = new PeerConnectionFactory();
+        MessageHandler messageHandler = new MessageHandler();
+
+
+//****        sampleClient -> messageHandler.onMessage
+//****        sampleClient -> messageHandler.onId
+
+
+//      Mqtt Service에서 Connect 이미 완료
+
+//        try {
+//            client = IO.socket(host);
+//        } catch (URISyntaxException e) {
+//            e.printStackTrace();
+//        }
+//        client.on("id", messageHandler.onId);
+//        client.on("message", messageHandler.onMessage);
+//        client.connect();
+
+//        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121"));
+
+
+        iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
+
+        pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
+        pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
+        pcConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
+
+        start("test");
+    }
+
 
     private class MessageHandler {
         private HashMap<String, Command> commandMap;
@@ -129,7 +179,9 @@ public class WebRtcClient {
             commandMap.put("candidate", new AddIceCandidateCommand());
         }
 
+
         private Emitter.Listener onMessage = new Emitter.Listener() {
+
             @Override
             public void call(Object... args) {
                 JSONObject data = (JSONObject) args[0];
@@ -157,6 +209,7 @@ public class WebRtcClient {
                     e.printStackTrace();
                 }
             }
+
         };
 
         private Emitter.Listener onId = new Emitter.Listener() {
@@ -181,6 +234,7 @@ public class WebRtcClient {
                 payload.put("type", sdp.type.canonicalForm());
                 payload.put("sdp", sdp.description);
                 sendMessage(id, sdp.type.canonicalForm(), payload);
+                Log.i(TAG,"sdp.description "+sdp.description);
                 pc.setLocalDescription(Peer.this, sdp);
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -273,34 +327,6 @@ public class WebRtcClient {
         endPoints[peer.endPoint] = false;
     }
 
-    public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params, EGLContext mEGLcontext) {
-        mListener = listener;
-        pcParams = params;
-
-
-        PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
-                params.videoCodecHwAcceleration, mEGLcontext);
-        factory = new PeerConnectionFactory();
-        MessageHandler messageHandler = new MessageHandler();
-
-//        try {
-//            client = IO.socket(host);
-//        } catch (URISyntaxException e) {
-//            e.printStackTrace();
-//        }
-//        client.on("id", messageHandler.onId);
-//        client.on("message", messageHandler.onMessage);
-//        client.connect();
-
-//        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121"));
-        iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
-
-        pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
-        pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
-        pcConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
-
-        start("test");
-    }
 
     /**
      * Call this method in Activity.onPause()

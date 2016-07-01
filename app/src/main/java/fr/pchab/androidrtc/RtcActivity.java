@@ -1,6 +1,7 @@
 package fr.pchab.androidrtc;
 
 import android.app.Activity;
+import android.app.Service;
 import android.content.Intent;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
@@ -14,6 +15,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import org.eclipse.paho.android.service.MqttService;
+import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.json.JSONException;
 import org.webrtc.MediaStream;
 import org.webrtc.VideoRenderer;
@@ -55,14 +57,13 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
 
     private static final String TAG = "seok";
 
-
-
     Intent serviceIntent;
 
     EditText to;
     EditText from;
     Button bFromsend;
     Button bTosend;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -80,6 +81,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
             //topic 으로 regit.(subscribe)
             public void onClick(View v) {
                 subscribe_topic(from.getText().toString());
+
 
             }
         });
@@ -193,6 +195,9 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
     }
 
     public void answer(String callerId) throws JSONException {
+        //상대방 전화번호
+
+
         client.sendMessage(callerId, "init", null);
         startCam();
     }
