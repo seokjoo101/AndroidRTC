@@ -10,11 +10,13 @@ import com.github.nkzawa.emitter.Emitter;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.pm.PackageManager;
 import android.opengl.EGLContext;
 import android.util.Log;
 import org.webrtc.*;
 
 public class WebRtcClient {
+
     private final static String TAG = WebRtcClient.class.getCanonicalName();
     private final static int MAX_PEER = 2;
     private boolean[] endPoints = new boolean[MAX_PEER];
@@ -26,8 +28,8 @@ public class WebRtcClient {
     private MediaStream localMS;
     private VideoSource videoSource;
     private RtcListener mListener;
-
     private Socket client;
+
 
     /**
      * Implement this interface to be notified of events.
@@ -105,12 +107,14 @@ public class WebRtcClient {
      * @param payload payload of message
      * @throws JSONException
      */
+
     public void sendMessage(String to, String type, JSONObject payload) throws JSONException {
         JSONObject message = new JSONObject();
         message.put("to", to);
         message.put("type", type);
         message.put("payload", payload);
-        //이부분에서 MQTT로 보내면 될 것 같다.
+
+        //이부분에서 MQTT로 Publish?
 //        client.emit("message", message);
     }
 

@@ -26,6 +26,7 @@ import java.util.List;
 //이걸 서비스로
 
 public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
+
     private final static int VIDEO_CALL_SENT = 666;
     private static final String VIDEO_CODEC_VP9 = "VP9";
     private static final String AUDIO_CODEC_OPUS = "opus";
@@ -84,7 +85,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
         });
 
         bTosend.setOnClickListener(new View.OnClickListener() {
-            //topic 으로 regit.(subscribe)
+            //상대 topic 으로 publish
             public void onClick(View v) {
                 ServiceMqtt.getInstance().publish(to.getText().toString(),"test00");
 
