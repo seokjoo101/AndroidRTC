@@ -269,8 +269,6 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
         ServiceMqtt.getInstance().setListener(mMqttLIstener);
         // MQTT 서비스 subtopic과 함께 connect
 
-
-
     }
 
 

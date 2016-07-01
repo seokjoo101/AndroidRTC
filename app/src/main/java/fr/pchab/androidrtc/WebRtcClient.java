@@ -414,6 +414,7 @@ public class WebRtcClient {
         mListener.onLocalStream(localMS);
 
         peer = peers.get(Global.Mytopic);
+        peer.pc.createOffer(peer, pcConstraints);
     }
 
     private VideoCapturer getVideoCapturer() {
