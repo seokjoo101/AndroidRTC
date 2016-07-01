@@ -41,19 +41,19 @@ public class ServiceMqtt extends Service  implements MqttCallback {
         }
     }
 
+    //디바이스 고유의 Serial Number 얻어오는 메서드
+    @SuppressLint("NewApi")
+    private static String getDeviceSerialNumber() {
+        try {
+            return (String) Build.class.getField("SERIAL").get(null);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
 
     public void setListener(MqttLIstener listener){
         mListener = listener;
     }
-
-    //getmessage 콜백
-    public interface MqttLIstener {
-
-        void getMessage(String msg);
-
-    }
-
-
 
     @Nullable
     @Override
@@ -176,12 +176,10 @@ public class ServiceMqtt extends Service  implements MqttCallback {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
-        /*Log.i(TAG,"Arrived topic  " + topic);
-        Log.i(TAG,"Arrived message  " + message.toString());
-        Log.i(TAG,"Arrived payload  " + message.getPayload());*/
-
-        mListener.getMessage(message.toString());
-
+        Log.i(TAG,"Arrived Topic  " + topic);
+        Log.i(TAG,"Arrived Message  " + message.toString());
+        WebRtcClient.getmInstance().getMessage(message.toString());
+//        mListener.getMessage(message.toString());
     }
 
     @Override
@@ -190,14 +188,11 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     }
 
 
-    //디바이스 고유의 Serial Number 얻어오는 메서드
-    @SuppressLint("NewApi")
-    private static String getDeviceSerialNumber() {
-        try {
-            return (String) Build.class.getField("SERIAL").get(null);
-        } catch (Exception ignored) {
-            return null;
-        }
+    //getmessage 콜백
+    public interface MqttLIstener {
+
+        void getMessage(String msg);
+
     }
 
 

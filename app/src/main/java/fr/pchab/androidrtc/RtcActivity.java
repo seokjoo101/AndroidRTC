@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.view.Window;
@@ -14,6 +16,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.webrtc.MediaStream;
 import org.webrtc.VideoRenderer;
 import org.webrtc.VideoRendererGui;
@@ -22,7 +25,7 @@ import java.util.List;
 
 //이걸 서비스로
 
-public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
+public class RtcActivity extends Activity implements WebRtcClient.RtcListener,ServiceMqtt.MqttLIstener {
 
     private final static int VIDEO_CALL_SENT = 666;
     private static final String VIDEO_CODEC_VP9 = "VP9";
@@ -42,6 +45,12 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
     private static final int REMOTE_Y = 0;
     private static final int REMOTE_WIDTH = 100;
     private static final int REMOTE_HEIGHT = 100;
+    private static final String TAG = "seok";
+    Intent serviceIntent;
+    EditText to;
+    EditText from;
+    Button bFromsend;
+    Button bTosend;
     private VideoRendererGui.ScalingType scalingType = VideoRendererGui.ScalingType.SCALE_ASPECT_FILL;
     private GLSurfaceView vsv;
     private VideoRenderer.Callbacks localRender;
@@ -49,22 +58,25 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
     private WebRtcClient client;
     private String mSocketAddress;
     private String callerId;
-
-    private static final String TAG = "seok";
-
-    Intent serviceIntent;
-
-    EditText to;
-    EditText from;
-    Button bFromsend;
-    Button bTosend;
-
+    private ServiceMqtt.MqttLIstener mMqttLIstener;
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch(msg.what){
+                case 1:
+                    startService(serviceIntent);
+                    break;
+            }
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.main);
+
 
 
         from=(EditText)findViewById(R.id.from);
@@ -77,15 +89,17 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
             //topic 으로 regit.(subscribe)
             public void onClick(View v) {
                 subscribe_topic(from.getText().toString());
-
+                startCam();
              }
         });
 
         bTosend.setOnClickListener(new View.OnClickListener() {
+            String id="offer";
+
             //상대 topic 으로 publish
             public void onClick(View v) {
-                ServiceMqtt.getInstance().publish(to.getText().toString(),"test00");
-
+                Global.ToTopic = to.getText().toString();
+               client.call(Global.ToTopic);
             }
         });
 
@@ -111,7 +125,6 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
         VideoRendererGui.setView(vsv, new Runnable() {
             @Override
             public void run() {
-                Log.i(TAG,"init");
                 init();
             }
         });
@@ -133,13 +146,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
         }
 
 
-        /*★*/
-        mMqttLIstener = new ServiceMqtt.MqttLIstener() {
-            @Override
-            public void getMessage(String msg) {
-                Log.i(TAG, "MSG : " + msg);
-            }
-        };
+
     }
 
     private void init() {
@@ -169,6 +176,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
             client.onResume();
         }
     }
+
     @Override
     public void onDestroy() {
         if(client != null) {
@@ -258,18 +266,19 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener {
                 scalingType);
     }
 
-    private ServiceMqtt.MqttLIstener mMqttLIstener;
-
-
     public void subscribe_topic(String sub_topic) {
+        Global.Mytopic=sub_topic;
         serviceIntent = new Intent(this,ServiceMqtt.getInstance().getClass());
         serviceIntent.putExtra("subtopic", sub_topic);
         this.startService(serviceIntent);
-        Global.Mytopic=sub_topic;
-        ServiceMqtt.getInstance().setListener(mMqttLIstener);
-        // MQTT 서비스 subtopic과 함께 connect
+        ServiceMqtt.getInstance().setListener(this);
+//        mHandler.sendEmptyMessageDelayed(1,3000);
 
+
+        // MQTT 서비스 subtopic과 함께 connect
     }
 
-
+    @Override
+    public void getMessage(String msg) {
+    }
 }
