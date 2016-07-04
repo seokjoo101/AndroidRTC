@@ -26,7 +26,6 @@ import java.util.List;
 //이걸 서비스로
 
 public class RtcActivity extends Activity implements WebRtcClient.RtcListener,ServiceMqtt.MqttLIstener {
-
     private final static int VIDEO_CALL_SENT = 666;
     private static final String VIDEO_CODEC_VP9 = "VP9";
     private static final String AUDIO_CODEC_OPUS = "opus";
@@ -89,16 +88,15 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
             public void onClick(View v) {
                 subscribe_topic(from.getText().toString());
                 startCam();
-             }
+            }
         });
 
         bTosend.setOnClickListener(new View.OnClickListener() {
-            String id="offer";
 
             //상대 topic 으로 publish
             public void onClick(View v) {
                 Global.ToTopic = to.getText().toString();
-               client.call(Global.ToTopic);
+                client.call(Global.ToTopic);
             }
         });
 
@@ -268,7 +266,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     public void subscribe_topic(String sub_topic) {
         Global.Mytopic=sub_topic;
         serviceIntent = new Intent(this,ServiceMqtt.getInstance().getClass());
-//        serviceIntent.putExtra("subtopic", sub_topic);
+        serviceIntent.putExtra("subtopic", sub_topic);
         this.startService(serviceIntent);
         ServiceMqtt.getInstance().setListener(this);
 //        mHandler.sendEmptyMessageDelayed(1,3000);
@@ -279,6 +277,5 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
 
     @Override
     public void getMessage(String msg) {
-
     }
 }

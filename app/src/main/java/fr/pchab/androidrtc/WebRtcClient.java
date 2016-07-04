@@ -1,25 +1,28 @@
 package fr.pchab.androidrtc;
 
+import android.opengl.EGLContext;
+import android.util.Log;
+
+
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.webrtc.AudioSource;
+import org.webrtc.DataChannel;
+import org.webrtc.IceCandidate;
+import org.webrtc.MediaConstraints;
+import org.webrtc.MediaStream;
+import org.webrtc.PeerConnection;
+import org.webrtc.PeerConnectionFactory;
+import org.webrtc.SdpObserver;
+import org.webrtc.SessionDescription;
+import org.webrtc.VideoCapturer;
+import org.webrtc.VideoCapturerAndroid;
+import org.webrtc.VideoSource;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import com.github.nkzawa.socketio.client.Socket;
-import com.github.nkzawa.emitter.Emitter;
-
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallback;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import android.app.Service;
-import android.opengl.EGLContext;
-import android.util.Log;
-import org.webrtc.*;
-
 public class WebRtcClient {
-
-    public static boolean bTosend =false;
     private static WebRtcClient mInstance;
     Peer peer;
     /**
@@ -46,7 +49,6 @@ public class WebRtcClient {
     private MediaStream localMS;
     private VideoSource videoSource;
     private RtcListener mListener;
-    private Socket client; //ServiceMqtt 의 sampleClient 사용
 
     public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params, EGLContext mEGLcontext) {
         mInstance = this;
@@ -57,7 +59,6 @@ public class WebRtcClient {
         PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
                 params.videoCodecHwAcceleration, mEGLcontext);
         factory = new PeerConnectionFactory();
-        MessageHandler messageHandler = new MessageHandler();
 
 
 //****        sampleClient -> messageHandler.onMessage
@@ -72,7 +73,7 @@ public class WebRtcClient {
 //        }
 //        client.on("id", messageHandler.onId);
 //        client.on("message", messageHandler.onMessage);
-//        client.connect();
+//        client.connect();`
 //        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121"));
 
 
@@ -99,8 +100,9 @@ public class WebRtcClient {
 
     public void sendMessage(String to, String type, JSONObject payload) throws JSONException {
         ServiceMqtt.getInstance().publish(Global.ToTopic,payload.toString());
-//        Log.d(TAG,payload.toString());
-     }
+
+//        Log.d(Global.TAG,payload.toString());
+    }
 
     public void call(String to){
         try {
@@ -132,29 +134,12 @@ public class WebRtcClient {
         peer.pc.dispose();
         videoSource.dispose();
         factory.dispose();
-        client.disconnect();
-        client.close();
     }
 
-    /**
-     * Start the client.
-     *
-     * Set up the local stream and notify the signaling server.
-     * Call this method after onCallReady.
-     *
-     * @param name client name
-     */
     public void start(String name){
         setCamera();
 
 
-//        try {
-//            JSONObject message = new JSONObject();
-//            message.put("name", name);
-//            client.emit("readyToStream", message);
-//        } catch (JSONException e) {
-//            e.printStackTrace();
-//        }
     }
 
     public void getMessage(String msg){
@@ -165,22 +150,29 @@ public class WebRtcClient {
             json = new JSONObject(msg);
 
 
-        if(json!=null){
+            if(json!=null){
+
+                Log.i(Global.TAG , "json.Type : " + json.getString("type"));
 
 
-            Log.i(Global.TAG , "json getMessage type : " +  json.getString("type"));
+                if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("offer")){
+                    //CALLEE
+//                Log.i(Global.TAG , "OFFER : " + json.getString("sdp"));
+                    Global.ToTopic = json.getString("answerTopic");
+//                Log.i(Global.TAG, "제발 " + Global.ToTopic);
+                    new CreateAnswerCommand().execute(json);
 
-             if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("offer")){
-                Log.i(Global.TAG , "OFFER : " + json.getString("sdp"));
-                new CreateAnswerCommand().execute(json);
-            }else if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("answer")){
-                new SetRemoteSDPCommand().execute(json);
-                Log.i(Global.TAG , "answer : " + json.getString("sdp"));
-            }else if (!json.isNull("type") && json.getString("tpye").equalsIgnoreCase("candidate")){
-                Log.i(Global.TAG , "candidate : " + json.getString("candidate"));
-                new AddIceCandidateCommand().execute(json);
+                }else if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("answer")){
+                    //CALLER
+                    new SetRemoteSDPCommand().execute(json);
+//                Log.i(Global.TAG , "answer : " + json.getString("sdp"));
+
+                }else if (!json.isNull("type") && json.getString("type").equalsIgnoreCase("candidate")){
+//                Log.i(Global.TAG , "candidate : " + json.getString("candidate"));
+                    new AddIceCandidateCommand().execute(json);
+
+                }
             }
-        }
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -205,10 +197,10 @@ public class WebRtcClient {
         mListener.onLocalStream(localMS);
 
         peer = new Peer();
-//        peer.pc.createOffer(peer,pcConstraints);
 
 
-     }
+
+    }
 
     private VideoCapturer getVideoCapturer() {
         String frontCameraDeviceName = VideoCapturerAndroid.getNameOfFrontFacingDevice();
@@ -237,7 +229,6 @@ public class WebRtcClient {
     private class CreateOfferCommand implements Command{
         public void execute( JSONObject payload) throws JSONException {
             Log.i(Global.TAG,"CreateOfferCommand");
-
 
             peer.pc.createOffer(peer, pcConstraints);
         }
@@ -280,36 +271,16 @@ public class WebRtcClient {
                         payload.getString("candidate")
                 );
                 pc.addIceCandidate(candidate);
+
             }
         }
     }
 
-    private class MessageHandler {
-        private HashMap<String, Command> commandMap;
-        private Emitter.Listener onId = new Emitter.Listener() {
-            @Override
-            public void call(Object... args) {
-                String id = (String) args[0];
-                mListener.onCallReady(id);
-            }
-        };
 
 
 
 
 
-
-        private MessageHandler() {
-            this.commandMap = new HashMap<>();
-            commandMap.put("init", new CreateOfferCommand());
-            commandMap.put("offer", new CreateAnswerCommand());
-            commandMap.put("answer", new SetRemoteSDPCommand());
-            commandMap.put("candidate", new AddIceCandidateCommand());
-
-
-
-        }
-    }
 
     private class Peer implements SdpObserver, PeerConnection.Observer{
         private PeerConnection pc;
@@ -331,8 +302,12 @@ public class WebRtcClient {
                 payload.put("type", sdp.type.canonicalForm());
                 payload.put("sdp", sdp.description);
 
-                sendMessage(Global.ToTopic, sdp.type.canonicalForm(), payload);
+                //answer 보낼때 Global.ToTopic
+                if(!sdp.type.canonicalForm().equalsIgnoreCase("answer")){
+                    payload.put("answerTopic",Global.Mytopic);
+                }
 
+                sendMessage(Global.ToTopic, sdp.type.canonicalForm(), payload);
                 Log.i(Global.TAG,"sdp.type.canonicalForm()  : "+ sdp.type.canonicalForm());
 
                 pc.setLocalDescription(Peer.this, sdp);
@@ -409,4 +384,6 @@ public class WebRtcClient {
 
         }
     }
+
+
 }

@@ -58,7 +58,7 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     @Override
     public IBinder onBind(Intent intent) {
 
-         return null;
+        return null;
     }
 
 
@@ -74,8 +74,8 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         Log.i(Global.TAG,"Service onStart");
-//        String sub = intent.getStringExtra("subtopic");
-        connectMQTT(Global.Mytopic);
+        String sub = intent.getStringExtra("subtopic");
+        connectMQTT(sub);
 
 
         return super.onStartCommand(intent, flags, startId);
@@ -86,6 +86,7 @@ public class ServiceMqtt extends Service  implements MqttCallback {
         clientId     = getDeviceSerialNumber();
         int qos  = 2;
 
+        // Log.i(Global.TAG,"클라이언트 아이디 " +clientId);
 
         try {
             sampleClient = new MqttClient(broker, clientId, persistence);
@@ -99,7 +100,7 @@ public class ServiceMqtt extends Service  implements MqttCallback {
 
             sampleClient.subscribe(subtopic,qos);
 
-            Log.i(Global.TAG,"Client Connected " + sampleClient.isConnected());
+//            Log.i(Global.TAG,"Client Connected " + sampleClient.isConnected());
 
         } catch(MqttException me) {
             Log.i(Global.TAG,"reason "+me.getReasonCode());
@@ -126,7 +127,7 @@ public class ServiceMqtt extends Service  implements MqttCallback {
         try{
             Log.i(Global.TAG,"Publishing message: "+ message);
 
-            sampleClient.publish(topicto,message.getBytes(),qos,true);
+            sampleClient.publish(Global.ToTopic,message.getBytes(),qos,true);
 
             Log.i(Global.TAG,"Message published");
 
@@ -172,7 +173,6 @@ public class ServiceMqtt extends Service  implements MqttCallback {
 
     }
 
-
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         Log.i(Global.TAG,"Arrived Topic  " + topic);
@@ -194,6 +194,10 @@ public class ServiceMqtt extends Service  implements MqttCallback {
         void getMessage(String msg);
 
     }
+
+
+
+
 
 
 }
