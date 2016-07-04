@@ -19,7 +19,6 @@ import org.webrtc.*;
 
 public class WebRtcClient {
 
-    private final static String TAG ="seok";
     public static boolean bTosend =false;
     private static WebRtcClient mInstance;
     Peer peer;
@@ -90,10 +89,10 @@ public class WebRtcClient {
 
     public static WebRtcClient getmInstance(){
         if(mInstance!=null) {
-            Log.i(Global.TAG , "NOT NULL");
+//            Log.i(Global.TAG , "NOT NULL");
             return mInstance;
         }else {
-            Log.i(Global.TAG , "NULL");
+//            Log.i(Global.TAG , "NULL");
             return null;
         }
     }
@@ -167,13 +166,11 @@ public class WebRtcClient {
 
 
         if(json!=null){
-            Log.i(Global.TAG , "jason not null");
 
-            Log.i(Global.TAG , "json.isNull : " + json.isNull("type"));
 
-            Log.i(Global.TAG , "json.getString : " +  json.getString("type").equalsIgnoreCase("offer"));
+            Log.i(Global.TAG , "json getMessage type : " +  json.getString("type"));
 
-            if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("offer")){
+             if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("offer")){
                 Log.i(Global.TAG , "OFFER : " + json.getString("sdp"));
                 new CreateAnswerCommand().execute(json);
             }else if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("answer")){
@@ -239,7 +236,7 @@ public class WebRtcClient {
 
     private class CreateOfferCommand implements Command{
         public void execute( JSONObject payload) throws JSONException {
-            Log.i(TAG,"CreateOfferCommand");
+            Log.i(Global.TAG,"CreateOfferCommand");
 
 
             peer.pc.createOffer(peer, pcConstraints);
@@ -248,7 +245,7 @@ public class WebRtcClient {
 
     private class CreateAnswerCommand implements Command{
         public void execute( JSONObject payload) throws JSONException {
-            Log.i(TAG,"CreateAnswerCommand");
+            Log.i(Global.TAG,"CreateAnswerCommand");
 
             SessionDescription sdp = new SessionDescription(
                     SessionDescription.Type.fromCanonicalForm(payload.getString("type")),
@@ -261,7 +258,7 @@ public class WebRtcClient {
 
     private class SetRemoteSDPCommand implements Command{
         public void execute( JSONObject payload) throws JSONException {
-            Log.d(TAG,"SetRemoteSDPCommand");
+            Log.d(Global.TAG,"SetRemoteSDPCommand");
 
             SessionDescription sdp = new SessionDescription(
                     SessionDescription.Type.fromCanonicalForm(payload.getString("type")),
@@ -273,7 +270,7 @@ public class WebRtcClient {
 
     private class AddIceCandidateCommand implements Command{
         public void execute( JSONObject payload) throws JSONException {
-            Log.i(TAG,"AddIceCandidateCommand");
+            Log.i(Global.TAG,"AddIceCandidateCommand");
             PeerConnection pc = peer.pc;
             if (pc.getRemoteDescription() != null) {
 
@@ -336,12 +333,12 @@ public class WebRtcClient {
 
                 sendMessage(Global.ToTopic, sdp.type.canonicalForm(), payload);
 
-                Log.i(TAG,"sdp.type.canonicalForm()  : "+ sdp.type.canonicalForm());
+                Log.i(Global.TAG,"sdp.type.canonicalForm()  : "+ sdp.type.canonicalForm());
 
                 pc.setLocalDescription(Peer.this, sdp);
             } catch (JSONException e) {
                 e.printStackTrace();
-                Log.i(TAG,"Sdp Send Fail");
+                Log.i(Global.TAG,"Sdp Send Fail");
 
             }
         }
@@ -351,13 +348,13 @@ public class WebRtcClient {
 
         @Override
         public void onCreateFailure(String s) {
-            Log.i(TAG,"createFail "+s);
+            Log.i(Global.TAG,"createFail "+s);
 
         }
 
         @Override
         public void onSetFailure(String s) {
-            Log.i(TAG,"setFail "+s);
+            Log.i(Global.TAG,"setFail "+s);
         }
 
         @Override
@@ -385,7 +382,7 @@ public class WebRtcClient {
 
                 sendMessage(id, "candidate", payload);
 
-//                Log.i(TAG , "candidate : " + candidate.sdp);
+//                Log.i(Global.TAG , "candidate : " + candidate.sdp);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -393,14 +390,14 @@ public class WebRtcClient {
 
         @Override
         public void onAddStream(MediaStream mediaStream) {
-            Log.d(TAG,"onAddStream "+mediaStream.label());
+            Log.d(Global.TAG,"onAddStream "+mediaStream.label());
             // remote streams are displayed from 1 to MAX_PEER (0 is localStream)
             mListener.onAddRemoteStream(mediaStream, endPoint+1);
         }
 
         @Override
         public void onRemoveStream(MediaStream mediaStream) {
-            Log.d(TAG,"onRemoveStream "+mediaStream.label());
+            Log.d(Global.TAG,"onRemoveStream "+mediaStream.label());
 
         }
 

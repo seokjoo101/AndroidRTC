@@ -45,7 +45,6 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     private static final int REMOTE_Y = 0;
     private static final int REMOTE_WIDTH = 100;
     private static final int REMOTE_HEIGHT = 100;
-    private static final String TAG = "seok";
     Intent serviceIntent;
     EditText to;
     EditText from;
@@ -269,7 +268,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     public void subscribe_topic(String sub_topic) {
         Global.Mytopic=sub_topic;
         serviceIntent = new Intent(this,ServiceMqtt.getInstance().getClass());
-        serviceIntent.putExtra("subtopic", sub_topic);
+//        serviceIntent.putExtra("subtopic", sub_topic);
         this.startService(serviceIntent);
         ServiceMqtt.getInstance().setListener(this);
 //        mHandler.sendEmptyMessageDelayed(1,3000);
@@ -280,5 +279,6 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
 
     @Override
     public void getMessage(String msg) {
+
     }
 }

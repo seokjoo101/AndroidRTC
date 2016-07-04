@@ -18,7 +18,6 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 public class ServiceMqtt extends Service  implements MqttCallback {
 
-    private static final String TAG = "seok";
     private static ServiceMqtt mInstance;
     public MqttLIstener mListener;
 
@@ -74,9 +73,9 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Log.i(TAG,"Service onStart");
-        String sub = intent.getStringExtra("subtopic");
-        connectMQTT(sub);
+        Log.i(Global.TAG,"Service onStart");
+//        String sub = intent.getStringExtra("subtopic");
+        connectMQTT(Global.Mytopic);
 
 
         return super.onStartCommand(intent, flags, startId);
@@ -87,7 +86,6 @@ public class ServiceMqtt extends Service  implements MqttCallback {
         clientId     = getDeviceSerialNumber();
         int qos  = 2;
 
-        // Log.i(TAG,"클라이언트 아이디 " +clientId);
 
         try {
             sampleClient = new MqttClient(broker, clientId, persistence);
@@ -101,14 +99,14 @@ public class ServiceMqtt extends Service  implements MqttCallback {
 
             sampleClient.subscribe(subtopic,qos);
 
-            Log.i(TAG,"Client Connected " + sampleClient.isConnected());
+            Log.i(Global.TAG,"Client Connected " + sampleClient.isConnected());
 
         } catch(MqttException me) {
-            Log.i(TAG,"reason "+me.getReasonCode());
-            Log.i(TAG,"msg "+me.getMessage());
-            Log.i(TAG,"loc "+me.getLocalizedMessage());
-            Log.i(TAG,"cause "+me.getCause());
-            Log.i(TAG,"excep"+me);
+            Log.i(Global.TAG,"reason "+me.getReasonCode());
+            Log.i(Global.TAG,"msg "+me.getMessage());
+            Log.i(Global.TAG,"loc "+me.getLocalizedMessage());
+            Log.i(Global.TAG,"cause "+me.getCause());
+            Log.i(Global.TAG,"excep"+me);
 
             me.printStackTrace();
         }
@@ -126,11 +124,11 @@ public class ServiceMqtt extends Service  implements MqttCallback {
 
 
         try{
-            Log.i(TAG,"Publishing message: "+ message);
+            Log.i(Global.TAG,"Publishing message: "+ message);
 
             sampleClient.publish(topicto,message.getBytes(),qos,true);
 
-            Log.i(TAG,"Message published");
+            Log.i(Global.TAG,"Message published");
 
 
 
@@ -138,11 +136,11 @@ public class ServiceMqtt extends Service  implements MqttCallback {
 
 
         }catch(MqttException me) {
-            Log.i(TAG,"reason "+me.getReasonCode());
-            Log.i(TAG,"msg "+me.getMessage());
-            Log.i(TAG,"loc "+me.getLocalizedMessage());
-            Log.i(TAG,"cause "+me.getCause());
-            Log.i(TAG,"excep"+me);
+            Log.i(Global.TAG,"reason "+me.getReasonCode());
+            Log.i(Global.TAG,"msg "+me.getMessage());
+            Log.i(Global.TAG,"loc "+me.getLocalizedMessage());
+            Log.i(Global.TAG,"cause "+me.getCause());
+            Log.i(Global.TAG,"excep"+me);
 
             me.printStackTrace();
         }
@@ -154,14 +152,14 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     private void disconnectMQTT(){
         try {
             sampleClient.disconnect();
-            Log.i(TAG, "Disconnected");
+            Log.i(Global.TAG, "Disconnected");
 
         }catch(MqttException me) {
-            Log.i(TAG,"reason "+me.getReasonCode());
-            Log.i(TAG,"msg "+me.getMessage());
-            Log.i(TAG,"loc "+me.getLocalizedMessage());
-            Log.i(TAG,"cause "+me.getCause());
-            Log.i(TAG,"excep"+me);
+            Log.i(Global.TAG,"reason "+me.getReasonCode());
+            Log.i(Global.TAG,"msg "+me.getMessage());
+            Log.i(Global.TAG,"loc "+me.getLocalizedMessage());
+            Log.i(Global.TAG,"cause "+me.getCause());
+            Log.i(Global.TAG,"excep"+me);
 
             me.printStackTrace();
         }
@@ -170,14 +168,15 @@ public class ServiceMqtt extends Service  implements MqttCallback {
 
     @Override
     public void connectionLost(Throwable cause) {
-        Log.i(TAG,cause.getLocalizedMessage());
+        Log.i(Global.TAG,cause.getLocalizedMessage());
 
     }
 
+
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
-        Log.i(TAG,"Arrived Topic  " + topic);
-        Log.i(TAG,"Arrived Message  " + message.toString());
+        Log.i(Global.TAG,"Arrived Topic  " + topic);
+        Log.i(Global.TAG,"Arrived Message  " + message.toString());
         if(WebRtcClient.getmInstance()!=null)
             WebRtcClient.getmInstance().getMessage(message.toString());
 //        mListener.getMessage(message.toString());
