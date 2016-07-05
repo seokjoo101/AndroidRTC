@@ -78,6 +78,8 @@ public class WebRtcClient {
 
 
         iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
+        iceServers.add(new PeerConnection.IceServer("stun:stun1.l.google.com:19302"));
+        iceServers.add(new PeerConnection.IceServer("stun:stun2.l.google.com:19302"));
 
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
@@ -159,7 +161,8 @@ public class WebRtcClient {
                     //CALLEE
 //                Log.i(Global.TAG , "OFFER : " + json.getString("sdp"));
                     Global.ToTopic = json.getString("answerTopic");
-//                Log.i(Global.TAG, "제발 " + Global.ToTopic);
+                    Log.i(Global.TAG , "Totopic : " + Global.ToTopic);
+
                     new CreateAnswerCommand().execute(json);
 
                 }else if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("answer")){
@@ -263,6 +266,10 @@ public class WebRtcClient {
         public void execute( JSONObject payload) throws JSONException {
             Log.i(Global.TAG,"AddIceCandidateCommand");
             PeerConnection pc = peer.pc;
+
+            Log.i(Global.TAG, "pc getRemoteDescription : " +pc.getRemoteDescription());
+
+
             if (pc.getRemoteDescription() != null) {
 
                 IceCandidate candidate = new IceCandidate(
@@ -270,6 +277,9 @@ public class WebRtcClient {
                         payload.getInt("label"),
                         payload.getString("candidate")
                 );
+
+                Log.i(Global.TAG,"아이디 : " + payload.getString("id") + "라벨 " + payload.getInt("label")+ "캔디 " +payload.getString("candidate"));
+//                peer.onIceCandidate(candidate);
                 pc.addIceCandidate(candidate);
 
             }
@@ -357,7 +367,7 @@ public class WebRtcClient {
 
                 sendMessage(id, "candidate", payload);
 
-//                Log.i(Global.TAG , "candidate : " + candidate.sdp);
+                Log.i(Global.TAG , "SEND candidate : " + candidate.sdp);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -384,6 +394,4 @@ public class WebRtcClient {
 
         }
     }
-
-
 }

@@ -5,7 +5,9 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.Message;
 import android.support.annotation.Nullable;
+import android.util.JsonWriter;
 import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -15,6 +17,8 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class ServiceMqtt extends Service  implements MqttCallback {
 
@@ -129,7 +133,6 @@ public class ServiceMqtt extends Service  implements MqttCallback {
 
             sampleClient.publish(Global.ToTopic,message.getBytes(),qos,true);
 
-            Log.i(Global.TAG,"Message published");
 
 
 
@@ -194,6 +197,12 @@ public class ServiceMqtt extends Service  implements MqttCallback {
         void getMessage(String msg);
 
     }
+
+
+
+
+
+
 
 
 

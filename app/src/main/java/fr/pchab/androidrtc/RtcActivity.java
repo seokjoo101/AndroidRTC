@@ -1,6 +1,8 @@
 package fr.pchab.androidrtc;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
@@ -8,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager.LayoutParams;
@@ -144,6 +147,37 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
 
 
 
+    }
+
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+
+        switch (keyCode) {
+            //하드웨어 뒤로가기 버튼에 따른 이벤트 설정
+            case KeyEvent.KEYCODE_BACK:
+
+                new AlertDialog.Builder(this)
+                        .setTitle("프로그램 종료")
+                        .setMessage("프로그램을 종료 하시겠습니까?")
+                        .setPositiveButton("예", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                // 프로세스 종료.
+                                android.os.Process.killProcess(android.os.Process.myPid());
+                            }
+                        })
+                        .setNegativeButton("아니오", null)
+                        .show();
+
+                break;
+
+            default:
+                break;
+        }
+
+        return super.onKeyDown(keyCode, event);
     }
 
     private void init() {
