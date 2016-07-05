@@ -77,7 +77,7 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        Log.i(Global.TAG,"Service onStart");
+
         String sub = intent.getStringExtra("subtopic");
         connectMQTT(sub);
 
@@ -99,6 +99,8 @@ public class ServiceMqtt extends Service  implements MqttCallback {
             sampleClient.connect(connOpts);
 
             sampleClient.setCallback(this);
+
+            Log.i(Global.TAG,"Mqtt Connect : " +sampleClient.isConnected());
 
             /******** client에 콜백을 Set ********/
 

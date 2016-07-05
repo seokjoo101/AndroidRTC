@@ -1,5 +1,6 @@
 package fr.pchab.androidrtc;
 
+import android.graphics.Camera;
 import android.opengl.EGLContext;
 import android.util.Log;
 
@@ -22,6 +23,8 @@ import org.webrtc.VideoSource;
 import java.util.HashMap;
 import java.util.LinkedList;
 
+//compile 'io.pristine:libjingle:11139@aar'
+//11139
 public class WebRtcClient {
     private static WebRtcClient mInstance;
     Peer peer;
@@ -38,6 +41,13 @@ public class WebRtcClient {
     //Candidate to - 자기전화번호 ,"candidate ", candidate
     // Answer to - 상대방전화번호 , "answer" , sdp.description
 
+
+
+
+
+
+
+
     JSONObject message = new JSONObject();
     String topic;
     String candidate;
@@ -50,14 +60,18 @@ public class WebRtcClient {
     private VideoSource videoSource;
     private RtcListener mListener;
 
-    public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params, EGLContext mEGLcontext) {
+    public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params) {
         mInstance = this;
         mListener = listener;
         pcParams = params;
 
 
+//        PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
+//                params.videoCodecHwAcceleration, mEGLcontext);
+
         PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
-                params.videoCodecHwAcceleration, mEGLcontext);
+                true);
+
         factory = new PeerConnectionFactory();
 
 
@@ -77,9 +91,7 @@ public class WebRtcClient {
 //        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121"));
 
 
-        iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
-        iceServers.add(new PeerConnection.IceServer("stun:stun1.l.google.com:19302"));
-        iceServers.add(new PeerConnection.IceServer("stun:stun2.l.google.com:19302"));
+        iceServers.add(new PeerConnection.IceServer("stun:61.38.158.169:3478"));
 
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
@@ -147,32 +159,30 @@ public class WebRtcClient {
     public void getMessage(String msg){
         JSONObject json = null;
 
-
         try {
             json = new JSONObject(msg);
 
-
             if(json!=null){
-
-                Log.i(Global.TAG , "json.Type : " + json.getString("type"));
-
-
                 if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("offer")){
                     //CALLEE
-//                Log.i(Global.TAG , "OFFER : " + json.getString("sdp"));
                     Global.ToTopic = json.getString("answerTopic");
                     Log.i(Global.TAG , "Totopic : " + Global.ToTopic);
-
                     new CreateAnswerCommand().execute(json);
+
+//                Log.i(Global.TAG , "OFFER : " + json.getString("sdp"));
+
 
                 }else if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("answer")){
                     //CALLER
                     new SetRemoteSDPCommand().execute(json);
-//                Log.i(Global.TAG , "answer : " + json.getString("sdp"));
 
+//                Log.i(Global.TAG , "answer : " + json.getString("sdp"));
                 }else if (!json.isNull("type") && json.getString("type").equalsIgnoreCase("candidate")){
-//                Log.i(Global.TAG , "candidate : " + json.getString("candidate"));
+                    //CALLEE
                     new AddIceCandidateCommand().execute(json);
+
+//                Log.i(Global.TAG , "candidate : " + json.getString("candidate"));
+
 
                 }
             }
@@ -202,12 +212,26 @@ public class WebRtcClient {
         peer = new Peer();
 
 
-
     }
 
-    private VideoCapturer getVideoCapturer() {
-        String frontCameraDeviceName = VideoCapturerAndroid.getNameOfFrontFacingDevice();
-        return VideoCapturerAndroid.create(frontCameraDeviceName);
+     private VideoCapturer getVideoCapturer() {
+         String[] cameraFacing = { "front", "back" };
+         int[] cameraIndex = { 0, 1 };
+         int[] cameraOrientation = { 0, 90, 180, 270 };
+         for (String facing : cameraFacing) {
+             for (int index : cameraIndex) {
+                 for (int orientation : cameraOrientation) {
+                     String name = "Camera " + index + ", Facing " + facing
+                             + ", Orientation " + orientation;
+                     VideoCapturer capturer = VideoCapturer.create(name);
+                     if (capturer != null) {
+                         Log.i(Global.TAG,"Using camera: " + name);
+                         return capturer;
+                     }
+                 }
+             }
+         }
+         throw new RuntimeException("Failed to open capturer");
     }
 
     /**
@@ -258,19 +282,23 @@ public class WebRtcClient {
                     SessionDescription.Type.fromCanonicalForm(payload.getString("type")),
                     payload.getString("sdp")
             );
+
             peer.pc.setRemoteDescription(peer, sdp);
+
         }
     }
 
     private class AddIceCandidateCommand implements Command{
         public void execute( JSONObject payload) throws JSONException {
-            Log.i(Global.TAG,"AddIceCandidateCommand");
+            Log.i(Global.TAG,"1 AddIceCandidateCommand");
+
             PeerConnection pc = peer.pc;
 
-            Log.i(Global.TAG, "pc getRemoteDescription : " +pc.getRemoteDescription());
+            Log.i(Global.TAG, "2 pc getRemoteDescription : " +pc.getRemoteDescription().toString());
 
 
             if (pc.getRemoteDescription() != null) {
+                Log.i(Global.TAG,"pc.getRemoteDescription is Not Null");
 
                 IceCandidate candidate = new IceCandidate(
                         payload.getString("id"),
@@ -278,11 +306,10 @@ public class WebRtcClient {
                         payload.getString("candidate")
                 );
 
-                Log.i(Global.TAG,"아이디 : " + payload.getString("id") + "라벨 " + payload.getInt("label")+ "캔디 " +payload.getString("candidate"));
-//                peer.onIceCandidate(candidate);
                 pc.addIceCandidate(candidate);
 
-            }
+            }else
+                Log.i(Global.TAG,"pc.getRemoteDescription is Null");
         }
     }
 
@@ -312,13 +339,13 @@ public class WebRtcClient {
                 payload.put("type", sdp.type.canonicalForm());
                 payload.put("sdp", sdp.description);
 
-                //answer 보낼때 Global.ToTopic
-                if(!sdp.type.canonicalForm().equalsIgnoreCase("answer")){
+                 if(sdp.type.canonicalForm().equalsIgnoreCase("offer")){
                     payload.put("answerTopic",Global.Mytopic);
                 }
 
-                sendMessage(Global.ToTopic, sdp.type.canonicalForm(), payload);
                 Log.i(Global.TAG,"sdp.type.canonicalForm()  : "+ sdp.type.canonicalForm());
+                sendMessage(Global.ToTopic, sdp.type.canonicalForm(), payload);
+
 
                 pc.setLocalDescription(Peer.this, sdp);
             } catch (JSONException e) {
@@ -347,6 +374,8 @@ public class WebRtcClient {
 
         @Override
         public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
+            Log.d(Global.TAG,"onIceConnectionChange " );
+
             if(iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED) {
 
                 mListener.onStatusChanged("DISCONNECTED");
@@ -354,10 +383,19 @@ public class WebRtcClient {
         }
 
         @Override
-        public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {}
+        public void onIceConnectionReceivingChange(boolean b) {
+
+        }
+
+        @Override
+        public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
+
+        }
+
 
         @Override
         public void onIceCandidate(final IceCandidate candidate) {
+            //OFFER나 ANSWER가 만들어질때
             try {
                 JSONObject payload = new JSONObject();
                 payload.put("label", candidate.sdpMLineIndex); //int
@@ -367,7 +405,6 @@ public class WebRtcClient {
 
                 sendMessage(id, "candidate", payload);
 
-                Log.i(Global.TAG , "SEND candidate : " + candidate.sdp);
             } catch (JSONException e) {
                 e.printStackTrace();
             }

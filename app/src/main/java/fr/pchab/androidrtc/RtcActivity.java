@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Point;
+import android.opengl.EGLContext;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,12 +22,12 @@ import android.widget.Toast;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.webrtc.MediaStream;
+import org.webrtc.RendererCommon;
 import org.webrtc.VideoRenderer;
 import org.webrtc.VideoRendererGui;
 
 import java.util.List;
 
-//이걸 서비스로
 
 public class RtcActivity extends Activity implements WebRtcClient.RtcListener,ServiceMqtt.MqttLIstener {
     private final static int VIDEO_CALL_SENT = 666;
@@ -52,7 +53,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     EditText from;
     Button bFromsend;
     Button bTosend;
-    private VideoRendererGui.ScalingType scalingType = VideoRendererGui.ScalingType.SCALE_ASPECT_FILL;
+    private  org.webrtc.RendererCommon.ScalingType   scalingType =  RendererCommon.ScalingType.SCALE_ASPECT_FILL;
     private GLSurfaceView vsv;
     private VideoRenderer.Callbacks localRender;
     private VideoRenderer.Callbacks remoteRender;
@@ -187,7 +188,8 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
                 true, false, displaySize.x, displaySize.y, 30, 1, VIDEO_CODEC_VP9, true, 1, AUDIO_CODEC_OPUS, true);
 
 
-        client = new WebRtcClient(this, mSocketAddress, params, VideoRendererGui.getEGLContext());
+        client = new WebRtcClient(this, mSocketAddress, params);
+
     }
 
     @Override
@@ -205,8 +207,8 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
         vsv.onResume();
         if(client != null) {
             client.onResume();
-        }
-    }
+}
+}
 
     @Override
     public void onDestroy() {
@@ -236,7 +238,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
 
 
         client.sendMessage(callerId, "init", null);
-        startCam();
+//        startCam();
     }
 
     public void call(String callId) {
@@ -249,7 +251,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == VIDEO_CALL_SENT) {
-            startCam();
+//            startCam();
         }
     }
 
@@ -274,7 +276,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
         VideoRendererGui.update(localRender,
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
-                scalingType);
+                scalingType,true);
     }
 
     @Override
@@ -282,11 +284,11 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
         remoteStream.videoTracks.get(0).addRenderer(new VideoRenderer(remoteRender));
         VideoRendererGui.update(remoteRender,
                 REMOTE_X, REMOTE_Y,
-                REMOTE_WIDTH, REMOTE_HEIGHT, scalingType);
+                REMOTE_WIDTH, REMOTE_HEIGHT, scalingType,true);
         VideoRendererGui.update(localRender,
                 LOCAL_X_CONNECTED, LOCAL_Y_CONNECTED,
                 LOCAL_WIDTH_CONNECTED, LOCAL_HEIGHT_CONNECTED,
-                scalingType);
+                scalingType,true);
     }
 
     @Override
@@ -294,7 +296,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
         VideoRendererGui.update(localRender,
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
-                scalingType);
+                scalingType,true);
     }
 
     public void subscribe_topic(String sub_topic) {
