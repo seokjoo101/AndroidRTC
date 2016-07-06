@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Point;
-import android.opengl.EGLContext;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,7 +19,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.webrtc.MediaStream;
 import org.webrtc.RendererCommon;
 import org.webrtc.VideoRenderer;
@@ -28,10 +26,12 @@ import org.webrtc.VideoRendererGui;
 
 import java.util.List;
 
-
+//맨처음 CALL하는것만 MQTT로 하고 node.js 로 sdp 랑 candidate 주는걸로
 public class RtcActivity extends Activity implements WebRtcClient.RtcListener,ServiceMqtt.MqttLIstener {
     private final static int VIDEO_CALL_SENT = 666;
-    private static final String VIDEO_CODEC_VP9 = "VP9";
+//    private static final String VIDEO_CODEC_VP9 = "VP9";
+
+    private static final String VIDEO_CODEC_VP8 = "VP8";
     private static final String AUDIO_CODEC_OPUS = "opus";
     // Local preview screen position before call is connected.
     private static final int LOCAL_X_CONNECTING = 0;
@@ -53,7 +53,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     EditText from;
     Button bFromsend;
     Button bTosend;
-    private  org.webrtc.RendererCommon.ScalingType   scalingType =  RendererCommon.ScalingType.SCALE_ASPECT_FILL;
+    private RendererCommon.ScalingType scalingType =  RendererCommon.ScalingType.SCALE_ASPECT_FILL;
     private GLSurfaceView vsv;
     private VideoRenderer.Callbacks localRender;
     private VideoRenderer.Callbacks remoteRender;
@@ -103,6 +103,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
                 client.call(Global.ToTopic);
             }
         });
+
 
 
 
@@ -166,6 +167,9 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
                                 // 프로세스 종료.
+
+                                stopService(serviceIntent);
+
                                 android.os.Process.killProcess(android.os.Process.myPid());
                             }
                         })
@@ -184,11 +188,16 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     private void init() {
         Point displaySize = new Point();
         getWindowManager().getDefaultDisplay().getSize(displaySize);
+
         PeerConnectionParameters params = new PeerConnectionParameters(
-                true, false, displaySize.x, displaySize.y, 30, 1, VIDEO_CODEC_VP9, true, 1, AUDIO_CODEC_OPUS, true);
+                true, false, displaySize.x, displaySize.y, 30, 1, VIDEO_CODEC_VP8, true, 1, AUDIO_CODEC_OPUS, true);
+
+        //      해상도를 galaxy3에 맞춘다.
+//        PeerConnectionParameters params = new PeerConnectionParameters(
+//                true, false, 720, 1280, 30, 1, VIDEO_CODEC_VP8, true, 1, AUDIO_CODEC_OPUS, true);
 
 
-        client = new WebRtcClient(this, mSocketAddress, params);
+        client = new WebRtcClient(this, mSocketAddress, params );
 
     }
 
@@ -302,7 +311,6 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     public void subscribe_topic(String sub_topic) {
         Global.Mytopic=sub_topic;
         serviceIntent = new Intent(this,ServiceMqtt.getInstance().getClass());
-        serviceIntent.putExtra("subtopic", sub_topic);
         this.startService(serviceIntent);
         ServiceMqtt.getInstance().setListener(this);
 //        mHandler.sendEmptyMessageDelayed(1,3000);
@@ -314,4 +322,5 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     @Override
     public void getMessage(String msg) {
     }
+
 }

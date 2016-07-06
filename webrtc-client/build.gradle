@@ -20,5 +20,4 @@ android {
 }
 
 dependencies {
-    compile 'io.pristine:libjingle:11139@aar'
 }

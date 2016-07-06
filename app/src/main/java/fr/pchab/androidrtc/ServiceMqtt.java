@@ -5,9 +5,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
-import android.os.Message;
 import android.support.annotation.Nullable;
-import android.util.JsonWriter;
 import android.util.Log;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -17,8 +15,6 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 public class ServiceMqtt extends Service  implements MqttCallback {
 
@@ -78,17 +74,16 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
 
-        String sub = intent.getStringExtra("subtopic");
-        connectMQTT(sub);
+        connectMQTT();
 
 
         return super.onStartCommand(intent, flags, startId);
     }
 
-    private void connectMQTT(String subtopic) {
+    private void connectMQTT() {
         broker       = "tcp://61.38.158.169:1883";
         clientId     = getDeviceSerialNumber();
-        int qos  = 2;
+        int qos  = 1;
 
         // Log.i(Global.TAG,"클라이언트 아이디 " +clientId);
 
@@ -104,7 +99,7 @@ public class ServiceMqtt extends Service  implements MqttCallback {
 
             /******** client에 콜백을 Set ********/
 
-            sampleClient.subscribe(subtopic,qos);
+            sampleClient.subscribe(Global.Mytopic,qos);
 
 //            Log.i(Global.TAG,"Client Connected " + sampleClient.isConnected());
 
@@ -127,13 +122,16 @@ public class ServiceMqtt extends Service  implements MqttCallback {
         String message = send_message.getText().toString();
 */
 
-        int qos = 2;
+        int qos = 1;
 
 
         try{
             Log.i(Global.TAG,"Publishing message: "+ message);
 
-            sampleClient.publish(Global.ToTopic,message.getBytes(),qos,true);
+//            sampleClient.publish(Global.ToTopic,message.getBytes(),qos,true);
+
+            MqttMessage message1= new MqttMessage(message.getBytes());
+            sampleClient.getTopic(Global.ToTopic).publish(message1);
 
 
 

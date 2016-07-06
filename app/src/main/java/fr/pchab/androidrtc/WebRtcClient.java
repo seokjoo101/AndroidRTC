@@ -1,9 +1,6 @@
 package fr.pchab.androidrtc;
 
-import android.graphics.Camera;
-import android.opengl.EGLContext;
 import android.util.Log;
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,10 +14,8 @@ import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 import org.webrtc.VideoCapturer;
-import org.webrtc.VideoCapturerAndroid;
 import org.webrtc.VideoSource;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 
 //compile 'io.pristine:libjingle:11139@aar'
@@ -91,7 +86,9 @@ public class WebRtcClient {
 //        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121"));
 
 
-        iceServers.add(new PeerConnection.IceServer("stun:61.38.158.169:3478"));
+
+//        iceServers.add(new PeerConnection.IceServer("stun:61.38.158.169:3478"));
+        iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
 
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
@@ -152,11 +149,10 @@ public class WebRtcClient {
 
     public void start(String name){
         setCamera();
+     }
 
 
-    }
-
-    public void getMessage(String msg){
+    synchronized public void getMessage(String msg){
         JSONObject json = null;
 
         try {
@@ -247,6 +243,7 @@ public class WebRtcClient {
         void onAddRemoteStream(MediaStream remoteStream, int endPoint);
 
         void onRemoveRemoteStream(int endPoint);
+
     }
 
     private interface Command{
@@ -316,9 +313,6 @@ public class WebRtcClient {
 
 
 
-
-
-
     private class Peer implements SdpObserver, PeerConnection.Observer{
         private PeerConnection pc;
         private String id;
@@ -339,15 +333,23 @@ public class WebRtcClient {
                 payload.put("type", sdp.type.canonicalForm());
                 payload.put("sdp", sdp.description);
 
-                 if(sdp.type.canonicalForm().equalsIgnoreCase("offer")){
+                if(sdp.type.canonicalForm().equalsIgnoreCase("offer")){
                     payload.put("answerTopic",Global.Mytopic);
                 }
+
+                /*if(sdp.type.canonicalForm().equalsIgnoreCase("answer")){
+                    sendAnswer(payload,false);
+                }else{
+                    sendMessage(Global.ToTopic, sdp.type.canonicalForm(), payload);
+                }*/
 
                 Log.i(Global.TAG,"sdp.type.canonicalForm()  : "+ sdp.type.canonicalForm());
                 sendMessage(Global.ToTopic, sdp.type.canonicalForm(), payload);
 
-
                 pc.setLocalDescription(Peer.this, sdp);
+
+
+//                start gathering candidates
             } catch (JSONException e) {
                 e.printStackTrace();
                 Log.i(Global.TAG,"Sdp Send Fail");
