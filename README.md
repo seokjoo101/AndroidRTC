@@ -22,9 +22,12 @@ Your stream should appear as "android_test" in ProjectRTC, so you can also use t
 
 ## Libraries
 
-### [libjingle peerconnection](https://code.google.com/p/webrtc/)
-### [socket.io-client](https://github.com/nkzawa/socket.io-client.java)
+### [libjingle peerconnection](https://code.google.com/p/webrtc/) 
 
+- gradle일 경우 
+dependencies {
+    compile 'io.pristine:libjingle:11139@aar'
+}
 ## Author
 
 - [Pierre Chabardes](mailto:pierre@chabardes.net)
