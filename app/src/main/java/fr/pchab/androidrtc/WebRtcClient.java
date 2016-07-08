@@ -32,21 +32,15 @@ public class WebRtcClient {
      * @throws JSONException
      */
 
-    // Offer to - 자기전화번호 ,"offer", sdp.description
-    //Candidate to - 자기전화번호 ,"candidate ", candidate
-    // Answer to - 상대방전화번호 , "answer" , sdp.description
+    /*Caller
+    Offer to - 상대방전화번호 ,"offer", sdp.description
+    Candidate to - 상대방전화번호 ,"candidate ", candidate*/
 
-
-
-
-
-
-
+    /*Callee
+    Answer to - 상대방전화번호 , "answer" , sdp.description
+    Candidate to - 상대방전화번호 ,"candidate ", candidate*/
 
     JSONObject message = new JSONObject();
-    String topic;
-    String candidate;
-    String sdp;
     private PeerConnectionFactory factory;
     private LinkedList<PeerConnection.IceServer> iceServers = new LinkedList<>();
     private PeerConnectionParameters pcParams;
@@ -61,33 +55,11 @@ public class WebRtcClient {
         pcParams = params;
 
 
-//        PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
-//                params.videoCodecHwAcceleration, mEGLcontext);
-
         PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
                 true);
-
         factory = new PeerConnectionFactory();
 
 
-//****        sampleClient -> messageHandler.onMessage
-//****        sampleClient -> messageHandler.onId
-
-
-
-//        try {
-//            client = IO.socket(host);
-//        } catch (URISyntaxException e) {
-//            e.printStackTrace();
-//        }
-//        client.on("id", messageHandler.onId);
-//        client.on("message", messageHandler.onMessage);
-//        client.connect();`
-//        iceServers.add(new PeerConnection.IceServer("stun:23.21.150.121"));
-
-
-
-//        iceServers.add(new PeerConnection.IceServer("stun:61.38.158.169:3478"));
         iceServers.add(new PeerConnection.IceServer("stun:stun.l.google.com:19302"));
 
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
@@ -240,9 +212,9 @@ public class WebRtcClient {
 
         void onLocalStream(MediaStream localStream);
 
-        void onAddRemoteStream(MediaStream remoteStream, int endPoint);
+        void onAddRemoteStream(MediaStream remoteStream);
 
-        void onRemoveRemoteStream(int endPoint);
+        void onRemoveRemoteStream();
 
     }
 
@@ -416,7 +388,7 @@ public class WebRtcClient {
         public void onAddStream(MediaStream mediaStream) {
             Log.d(Global.TAG,"onAddStream "+mediaStream.label());
             // remote streams are displayed from 1 to MAX_PEER (0 is localStream)
-            mListener.onAddRemoteStream(mediaStream, endPoint+1);
+         mListener.onAddRemoteStream(mediaStream);
         }
 
         @Override

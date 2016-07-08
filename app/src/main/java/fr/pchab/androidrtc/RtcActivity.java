@@ -16,6 +16,7 @@ import android.view.Window;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -29,9 +30,10 @@ import java.util.List;
 //맨처음 CALL하는것만 MQTT로 하고 node.js 로 sdp 랑 candidate 주는걸로
 public class RtcActivity extends Activity implements WebRtcClient.RtcListener,ServiceMqtt.MqttLIstener {
     private final static int VIDEO_CALL_SENT = 666;
-//    private static final String VIDEO_CODEC_VP9 = "VP9";
+    private static final String VIDEO_CODEC_VP9 = "VP9";
+    private static final String VIDEO_CODEC_H_264 = "H.264";
 
-    private static final String VIDEO_CODEC_VP8 = "VP8";
+
     private static final String AUDIO_CODEC_OPUS = "opus";
     // Local preview screen position before call is connected.
     private static final int LOCAL_X_CONNECTING = 0;
@@ -39,20 +41,21 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     private static final int LOCAL_WIDTH_CONNECTING = 100;
     private static final int LOCAL_HEIGHT_CONNECTING = 100;
     // Local preview screen position after call is connected.
-    private static final int LOCAL_X_CONNECTED = 72;
-    private static final int LOCAL_Y_CONNECTED = 72;
-    private static final int LOCAL_WIDTH_CONNECTED = 25;
-    private static final int LOCAL_HEIGHT_CONNECTED = 25;
+    private static final int LOCAL_X_CONNECTED = 0;
+    private static final int LOCAL_Y_CONNECTED = 50;
+    private static final int LOCAL_WIDTH_CONNECTED = 100;
+    private static final int LOCAL_HEIGHT_CONNECTED = 50;
     // Remote video screen position
     private static final int REMOTE_X = 0;
     private static final int REMOTE_Y = 0;
     private static final int REMOTE_WIDTH = 100;
-    private static final int REMOTE_HEIGHT = 100;
+    private static final int REMOTE_HEIGHT = 50;
     Intent serviceIntent;
     EditText to;
     EditText from;
     Button bFromsend;
     Button bTosend;
+    ImageButton bHnagOff;
     private RendererCommon.ScalingType scalingType =  RendererCommon.ScalingType.SCALE_ASPECT_FILL;
     private GLSurfaceView vsv;
     private VideoRenderer.Callbacks localRender;
@@ -86,6 +89,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
 
         bFromsend=(Button)findViewById(R.id.fromsend);
         bTosend=(Button) findViewById(R.id.tosend);
+        bHnagOff=(ImageButton)findViewById(R.id.hangoff);
 
         bFromsend.setOnClickListener(new View.OnClickListener() {
             //topic 으로 regit.(subscribe)
@@ -101,6 +105,13 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
             public void onClick(View v) {
                 Global.ToTopic = to.getText().toString();
                 client.call(Global.ToTopic);
+            }
+        });
+        bHnagOff.setOnClickListener(new View.OnClickListener() {
+            //topic 으로 regit.(subscribe)
+            public void onClick(View v) {
+
+                onRemoveRemoteStream();
             }
         });
 
@@ -124,6 +135,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
         vsv = (GLSurfaceView) findViewById(R.id.glview_call);
         vsv.setPreserveEGLContextOnPause(true);
         vsv.setKeepScreenOn(true);
+
         VideoRendererGui.setView(vsv, new Runnable() {
             @Override
             public void run() {
@@ -190,7 +202,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
         getWindowManager().getDefaultDisplay().getSize(displaySize);
 
         PeerConnectionParameters params = new PeerConnectionParameters(
-                true, false, displaySize.x, displaySize.y, 30, 1, VIDEO_CODEC_VP8, true, 1, AUDIO_CODEC_OPUS, true);
+                true, false, displaySize.x, displaySize.y, 30, 1, VIDEO_CODEC_H_264, true, 1, AUDIO_CODEC_OPUS, true);
 
         //      해상도를 galaxy3에 맞춘다.
 //        PeerConnectionParameters params = new PeerConnectionParameters(
@@ -229,19 +241,6 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
 
     }
 
-    @Override
-    public void onCallReady(String callId) {
-        if (callerId != null) {
-            try {
-                answer(callerId);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        } else {
-            call(callId);
-        }
-    }
-
     public void answer(String callerId) throws JSONException {
         //상대방 전화번호
 
@@ -270,6 +269,11 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     }
 
     @Override
+    public void onCallReady(String callId) {
+
+    }
+
+    @Override
     public void onStatusChanged(final String newStatus) {
         runOnUiThread(new Runnable() {
             @Override
@@ -289,7 +293,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     }
 
     @Override
-    public void onAddRemoteStream(MediaStream remoteStream, int endPoint) {
+    public void onAddRemoteStream(MediaStream remoteStream) {
         remoteStream.videoTracks.get(0).addRenderer(new VideoRenderer(remoteRender));
         VideoRendererGui.update(remoteRender,
                 REMOTE_X, REMOTE_Y,
@@ -298,10 +302,18 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
                 LOCAL_X_CONNECTED, LOCAL_Y_CONNECTED,
                 LOCAL_WIDTH_CONNECTED, LOCAL_HEIGHT_CONNECTED,
                 scalingType,true);
-    }
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                bHnagOff.setVisibility(View.VISIBLE);
+
+            }
+        });
+     }
 
     @Override
-    public void onRemoveRemoteStream(int endPoint) {
+    public void onRemoveRemoteStream() {
         VideoRendererGui.update(localRender,
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
