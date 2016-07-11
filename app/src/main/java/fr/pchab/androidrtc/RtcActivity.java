@@ -27,7 +27,6 @@ import org.webrtc.VideoRendererGui;
 
 import java.util.List;
 
-//맨처음 CALL하는것만 MQTT로 하고 node.js 로 sdp 랑 candidate 주는걸로
 public class RtcActivity extends Activity implements WebRtcClient.RtcListener,ServiceMqtt.MqttLIstener {
     private final static int VIDEO_CALL_SENT = 666;
     private static final String VIDEO_CODEC_VP9 = "VP9";
@@ -50,7 +49,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     private static final int REMOTE_Y = 0;
     private static final int REMOTE_WIDTH = 100;
     private static final int REMOTE_HEIGHT = 50;
-    Intent serviceIntent;
+    Intent serviceIntent=null;
     EditText to;
     EditText from;
     Button bFromsend;
@@ -62,19 +61,6 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     private VideoRenderer.Callbacks remoteRender;
     private WebRtcClient client;
     private String mSocketAddress;
-    private String callerId;
-    private ServiceMqtt.MqttLIstener mMqttLIstener;
-    private Handler mHandler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            switch(msg.what){
-                case 1:
-                    startService(serviceIntent);
-                    break;
-            }
-        }
-    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -110,8 +96,8 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
         bHnagOff.setOnClickListener(new View.OnClickListener() {
             //topic 으로 regit.(subscribe)
             public void onClick(View v) {
+                client.removePeer();
 
-                onRemoveRemoteStream();
             }
         });
 
@@ -154,10 +140,6 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
         final Intent intent = getIntent();
         final String action = intent.getAction();
 
-        if (Intent.ACTION_VIEW.equals(action)) {
-            final List<String> segments = intent.getData().getPathSegments();
-            callerId = segments.get(0);
-        }
 
 
 
@@ -180,7 +162,8 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
                             public void onClick(DialogInterface dialog, int which) {
                                 // 프로세스 종료.
 
-                                stopService(serviceIntent);
+                                if(serviceIntent!=null)
+                                    stopService(serviceIntent);
 
                                 android.os.Process.killProcess(android.os.Process.myPid());
                             }
@@ -286,6 +269,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     @Override
     public void onLocalStream(MediaStream localStream) {
         localStream.videoTracks.get(0).addRenderer(new VideoRenderer(localRender));
+
         VideoRendererGui.update(localRender,
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
@@ -295,7 +279,7 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
     @Override
     public void onAddRemoteStream(MediaStream remoteStream) {
         remoteStream.videoTracks.get(0).addRenderer(new VideoRenderer(remoteRender));
-        VideoRendererGui.update(remoteRender,
+         VideoRendererGui.update(remoteRender,
                 REMOTE_X, REMOTE_Y,
                 REMOTE_WIDTH, REMOTE_HEIGHT, scalingType,true);
         VideoRendererGui.update(localRender,
@@ -314,20 +298,21 @@ public class RtcActivity extends Activity implements WebRtcClient.RtcListener,Se
 
     @Override
     public void onRemoveRemoteStream() {
+
         VideoRendererGui.update(localRender,
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
                 scalingType,true);
+
+
     }
 
     public void subscribe_topic(String sub_topic) {
         Global.Mytopic=sub_topic;
         serviceIntent = new Intent(this,ServiceMqtt.getInstance().getClass());
         this.startService(serviceIntent);
+
         ServiceMqtt.getInstance().setListener(this);
-//        mHandler.sendEmptyMessageDelayed(1,3000);
-
-
         // MQTT 서비스 subtopic과 함께 connect
     }
 

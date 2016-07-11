@@ -288,7 +288,6 @@ public class WebRtcClient {
     private class Peer implements SdpObserver, PeerConnection.Observer{
         private PeerConnection pc;
         private String id;
-        private int endPoint;
 
         public Peer() {
             this.pc = factory.createPeerConnection(iceServers, pcConstraints, this);
@@ -350,8 +349,9 @@ public class WebRtcClient {
         public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
             Log.d(Global.TAG,"onIceConnectionChange " );
 
-            if(iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED) {
 
+            if(iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED) {
+                removePeer();
                 mListener.onStatusChanged("DISCONNECTED");
             }
         }
@@ -394,8 +394,8 @@ public class WebRtcClient {
         @Override
         public void onRemoveStream(MediaStream mediaStream) {
             Log.d(Global.TAG,"onRemoveStream "+mediaStream.label());
-
-        }
+            peer.pc.removeStream(mediaStream);
+         }
 
         @Override
         public void onDataChannel(DataChannel dataChannel) {}
@@ -404,5 +404,11 @@ public class WebRtcClient {
         public void onRenegotiationNeeded() {
 
         }
+    }
+
+    public void removePeer() {
+        peer.pc.close();
+        mListener.onRemoveRemoteStream();
+        mListener.onStatusChanged("DISCONNECTED");
     }
 }
