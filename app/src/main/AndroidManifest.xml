@@ -44,6 +44,8 @@
                     android:scheme="http" />
             </intent-filter>
         </activity>
+        <activity android:name=".MyWelcomeActivity"
+            android:theme="@style/WelcomeScreenTheme"/>
 
         <service android:name="org.eclipse.paho.android.service.MqttService" />
         <service

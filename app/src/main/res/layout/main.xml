@@ -10,16 +10,22 @@
         android:id="@+id/screendisplay"
         android:layout_width="match_parent"
         android:layout_gravity="center"
-        android:layout_height="470dp"
+        android:layout_height="400dp"
         />
 
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="horizontal"
-            android:gravity="center"
+            android:orientation="vertical"
             >
 
+            <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:orientation="horizontal"
+                android:gravity="center"
+
+                >
 
         <EditText
             android:id="@+id/from"
@@ -45,14 +51,31 @@
                 android:layout_height="wrap_content"
                 android:text="Call"/>
 
+                </LinearLayout>
 
+
+
+            <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center"
+                >
             <Button
                 android:id="@+id/ringoff"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="OFF"
-
                 />
+
+
+            <Button
+                android:id="@+id/welcome"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="welcome"
+                />
+                </LinearLayout>
             </LinearLayout>
 
 

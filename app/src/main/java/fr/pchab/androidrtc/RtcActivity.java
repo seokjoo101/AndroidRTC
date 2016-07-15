@@ -11,6 +11,8 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.stephentuso.welcome.WelcomeScreenHelper;
+
 import butterknife.BindView;
 import fr.pchab.androidrtc.base.Global;
 
@@ -28,6 +30,9 @@ public class RtcActivity extends Activity {
 
     VideoViewService videoViewService;
 
+    WelcomeScreenHelper welcomeScreen;
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +47,18 @@ public class RtcActivity extends Activity {
         bFromsend=(Button)findViewById(R.id.fromsend);
         bTosend=(Button) findViewById(R.id.tosend);
         ringoff=(Button)findViewById(R.id.ringoff);
+
+        welcomeScreen = new WelcomeScreenHelper(this, MyWelcomeActivity.class);
+        welcomeScreen.show(savedInstanceState);
+
+
+        findViewById(R.id.welcome).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                welcomeScreen.forceShow();
+            }
+        });
+
 
 
         bFromsend.setOnClickListener(new View.OnClickListener() {
@@ -121,6 +138,13 @@ public class RtcActivity extends Activity {
     private void startVideoService() {
         videoServiceIntent = new Intent(this,VideoViewService.class);
         this.startService(videoServiceIntent);
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        welcomeScreen.onSaveInstanceState(outState);
 
     }
 
