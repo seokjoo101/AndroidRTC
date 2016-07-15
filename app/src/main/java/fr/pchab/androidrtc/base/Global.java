@@ -1,4 +1,4 @@
-package fr.pchab.androidrtc;
+package fr.pchab.androidrtc.base;
 
 /**
  * Created by John on 2016-07-01.

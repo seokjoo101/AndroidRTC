@@ -16,6 +16,8 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
+import fr.pchab.androidrtc.base.Global;
+
 public class ServiceMqtt extends Service  implements MqttCallback {
 
     private static ServiceMqtt mInstance;
@@ -122,13 +124,13 @@ public class ServiceMqtt extends Service  implements MqttCallback {
         String message = send_message.getText().toString();
 */
 
-        int qos = 1;
+//        int qos = 1;
 
 
         try{
             Log.i(Global.TAG,"Publishing message: "+ message);
 
-//            sampleClient.publish(Global.ToTopic,message.getBytes(),qos,true);
+//            sampleClient.publish(Global.ToTopic,message.getBytes(),qos,false);
 
             MqttMessage message1= new MqttMessage(message.getBytes());
             sampleClient.getTopic(Global.ToTopic).publish(message1);

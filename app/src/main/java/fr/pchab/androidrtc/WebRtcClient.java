@@ -18,6 +18,8 @@ import org.webrtc.VideoSource;
 
 import java.util.LinkedList;
 
+import fr.pchab.androidrtc.base.Global;
+
 //compile 'io.pristine:libjingle:11139@aar'
 //11139
 public class WebRtcClient {
@@ -49,10 +51,11 @@ public class WebRtcClient {
     private VideoSource videoSource;
     private RtcListener mListener;
 
-    public WebRtcClient(RtcListener listener, String host, PeerConnectionParameters params) {
+    public WebRtcClient(RtcListener listener, PeerConnectionParameters params) {
         mInstance = this;
         mListener = listener;
         pcParams = params;
+
 
 
         PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
@@ -65,8 +68,6 @@ public class WebRtcClient {
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
         pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
         pcConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
-
-//        start("test");
 
     }
 
@@ -119,7 +120,7 @@ public class WebRtcClient {
         factory.dispose();
     }
 
-    public void start(String name){
+    public void start(){
         setCamera();
      }
 
@@ -206,7 +207,6 @@ public class WebRtcClient {
      * Implement this interface to be notified of events.
      */
     public interface RtcListener{
-        void onCallReady(String callId);
 
         void onStatusChanged(String newStatus);
 
@@ -227,7 +227,9 @@ public class WebRtcClient {
             Log.i(Global.TAG,"CreateOfferCommand");
 
             peer.pc.createOffer(peer, pcConstraints);
-        }
+
+
+         }
     }
 
     private class CreateAnswerCommand implements Command{
@@ -280,12 +282,13 @@ public class WebRtcClient {
             }else
                 Log.i(Global.TAG,"pc.getRemoteDescription is Null");
         }
+
+
     }
 
 
 
-
-    private class Peer implements SdpObserver, PeerConnection.Observer{
+    private class Peer implements SdpObserver, PeerConnection.Observer {
         private PeerConnection pc;
         private String id;
 
