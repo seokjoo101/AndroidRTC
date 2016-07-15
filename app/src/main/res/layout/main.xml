@@ -46,15 +46,11 @@
                 android:text="Call"/>
 
 
-            <ImageButton
-                android:id="@+id/hangoff"
+            <Button
+                android:id="@+id/ringoff"
                 android:layout_width="45dp"
                 android:layout_height="45dp"
-                android:scaleType="fitXY"
-                android:text="hangoff"
-                android:src="@mipmap/hangoff"
-                android:background="@android:color/transparent"
-                android:visibility="gone"
+                android:text="OFF"
 
                 />
             </LinearLayout>

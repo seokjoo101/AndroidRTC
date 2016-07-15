@@ -120,6 +120,7 @@ public class WebRtcClient {
         factory.dispose();
     }
 
+
     public void start(){
         setCamera();
      }
@@ -128,6 +129,7 @@ public class WebRtcClient {
     synchronized public void getMessage(String msg){
         JSONObject json = null;
 
+        Log.e(Global.TAG, "getMessage: " + peer.pc.iceConnectionState());
         try {
             json = new JSONObject(msg);
 
@@ -224,8 +226,14 @@ public class WebRtcClient {
 
     private class CreateOfferCommand implements Command{
         public void execute( JSONObject payload) throws JSONException {
-            Log.i(Global.TAG,"CreateOfferCommand");
+            Log.i(Global.TAG, "CreateOfferCommand");
 
+
+            //다시 전화걸때 재연결
+            if (peer.pc.iceConnectionState() == PeerConnection.IceConnectionState.CLOSED){
+                peer.pc = factory.createPeerConnection(iceServers, pcConstraints, peer);
+                peer. pc.addStream(localMS);
+             }
             peer.pc.createOffer(peer, pcConstraints);
 
 
@@ -236,12 +244,19 @@ public class WebRtcClient {
         public void execute( JSONObject payload) throws JSONException {
             Log.i(Global.TAG,"CreateAnswerCommand");
 
+            //다시 전화걸때 재연결
+            if(peer.pc.iceConnectionState() == PeerConnection.IceConnectionState.CLOSED) {
+                peer.pc = factory.createPeerConnection(iceServers, pcConstraints, peer);
+                peer.pc.addStream(localMS);
+            }
+
             SessionDescription sdp = new SessionDescription(
                     SessionDescription.Type.fromCanonicalForm(payload.getString("type")),
                     payload.getString("sdp")
             );
             peer.pc.setRemoteDescription(peer, sdp);
             peer.pc.createAnswer(peer, pcConstraints);
+
         }
     }
 
@@ -311,11 +326,7 @@ public class WebRtcClient {
                     payload.put("answerTopic",Global.Mytopic);
                 }
 
-                /*if(sdp.type.canonicalForm().equalsIgnoreCase("answer")){
-                    sendAnswer(payload,false);
-                }else{
-                    sendMessage(Global.ToTopic, sdp.type.canonicalForm(), payload);
-                }*/
+
 
                 Log.i(Global.TAG,"sdp.type.canonicalForm()  : "+ sdp.type.canonicalForm());
                 sendMessage(Global.ToTopic, sdp.type.canonicalForm(), payload);
@@ -350,12 +361,11 @@ public class WebRtcClient {
 
         @Override
         public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-            Log.d(Global.TAG,"onIceConnectionChange " );
-
+            Log.d(Global.TAG,"onIceConnectionChange :" + iceConnectionState);
 
             if(iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED) {
                 removePeer();
-                mListener.onStatusChanged("DISCONNECTED");
+                mListener.onStatusChanged("통화 종료");
             }
         }
 
@@ -391,12 +401,13 @@ public class WebRtcClient {
         public void onAddStream(MediaStream mediaStream) {
             Log.d(Global.TAG,"onAddStream "+mediaStream.label());
             // remote streams are displayed from 1 to MAX_PEER (0 is localStream)
-         mListener.onAddRemoteStream(mediaStream);
+             mListener.onAddRemoteStream(mediaStream);
         }
 
         @Override
         public void onRemoveStream(MediaStream mediaStream) {
             Log.d(Global.TAG,"onRemoveStream "+mediaStream.label());
+            mListener.onRemoveRemoteStream();
             peer.pc.removeStream(mediaStream);
          }
 
@@ -411,7 +422,13 @@ public class WebRtcClient {
 
     public void removePeer() {
         peer.pc.close();
+
         mListener.onRemoveRemoteStream();
-        mListener.onStatusChanged("DISCONNECTED");
+        mListener.onStatusChanged("통화 종료");
     }
+
+    void reCall(){
+        peer.pc = factory.createPeerConnection(iceServers, pcConstraints, peer);
+    }
+
 }

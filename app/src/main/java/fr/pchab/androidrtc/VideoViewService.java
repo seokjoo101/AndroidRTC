@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.graphics.Point;
 import android.opengl.GLSurfaceView;
+import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.Gravity;
@@ -13,6 +14,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.Toast;
 
 import org.webrtc.MediaStream;
 import org.webrtc.RendererCommon;
@@ -24,7 +27,7 @@ import butterknife.ButterKnife;
 import fr.pchab.androidrtc.base.Global;
 import fr.pchab.androidrtc.base.WindowTouchView;
 
-public class VideoViewService extends Service implements View.OnClickListener , WindowTouchView,WebRtcClient.RtcListener{
+public class VideoViewService extends Service implements WindowTouchView,WebRtcClient.RtcListener{
 
     private final static int VIDEO_CALL_SENT = 666;
     private static final String VIDEO_CODEC_VP8 = "VP8";
@@ -60,8 +63,9 @@ public class VideoViewService extends Service implements View.OnClickListener , 
     private WebRtcClient client;
 
     @BindView(R.id.glview_call)
-    public GLSurfaceView vsv;
+    GLSurfaceView vsv;
 
+    private Handler mHandler;
 
     private static VideoViewService mInstance;
 
@@ -79,6 +83,8 @@ public class VideoViewService extends Service implements View.OnClickListener , 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        mHandler = new Handler();
 
         mInstance=this;
 
@@ -133,11 +139,6 @@ public class VideoViewService extends Service implements View.OnClickListener , 
     }
 
     @Override
-    public void onClick(View view) {
-
-    }
-
-    @Override
     public void updateViewLayout(int x, int y) {
         if (windowViewLayoutParams != null) {
             windowViewLayoutParams.x += x;
@@ -176,7 +177,7 @@ public class VideoViewService extends Service implements View.OnClickListener , 
 
     @Override
     public void onStatusChanged(String newStatus) {
-        Log.i("floating", "state : "+ newStatus);
+        Log.i(Global.TAG, "state : "+ newStatus);
     }
 
     @Override
@@ -211,6 +212,8 @@ public class VideoViewService extends Service implements View.OnClickListener , 
                 LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING,
                 scalingType,true);
 
+        mHandler.post(new ToastRunnable("통화가 종료되었습니다"));
+
     }
 
     @Override
@@ -225,7 +228,25 @@ public class VideoViewService extends Service implements View.OnClickListener , 
 
     public  void call(){
         client.call(Global.ToTopic);
-
     }
 
-}
+
+    public void ringOff(){
+        client.removePeer();
+    }
+
+    private class ToastRunnable implements Runnable {
+        String mText;
+
+        public ToastRunnable(String text) {
+            mText = text;
+        }
+
+        @Override
+        public void run(){
+            Toast.makeText(getApplicationContext(), mText, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+ }

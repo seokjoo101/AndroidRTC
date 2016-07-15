@@ -10,10 +10,8 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
 import fr.pchab.androidrtc.base.Global;
 
 public class RtcActivity extends Activity {
@@ -23,6 +21,10 @@ public class RtcActivity extends Activity {
     EditText from;
     Button bFromsend;
     Button bTosend;
+
+
+
+    Button ringoff;
 
     VideoViewService videoViewService;
 
@@ -39,6 +41,8 @@ public class RtcActivity extends Activity {
 
         bFromsend=(Button)findViewById(R.id.fromsend);
         bTosend=(Button) findViewById(R.id.tosend);
+        ringoff=(Button)findViewById(R.id.ringoff);
+
 
         bFromsend.setOnClickListener(new View.OnClickListener() {
             //topic 으로 regit.(subscribe)
@@ -60,6 +64,12 @@ public class RtcActivity extends Activity {
         });
 
 
+        ringoff.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                VideoViewService.getmInstance().ringOff();
+            }
+        });
 
     }
 

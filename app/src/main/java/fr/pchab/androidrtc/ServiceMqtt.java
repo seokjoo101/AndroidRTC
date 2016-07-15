@@ -23,8 +23,6 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     private static ServiceMqtt mInstance;
     public MqttLIstener mListener;
 
-
-
     MqttClient sampleClient;
 
     String broker;
@@ -119,10 +117,6 @@ public class ServiceMqtt extends Service  implements MqttCallback {
 
 
     public void publish(String topicto,String message){
-/*
-        String topicto = topic_To.getText().toString();
-        String message = send_message.getText().toString();
-*/
 
 //        int qos = 1;
 
