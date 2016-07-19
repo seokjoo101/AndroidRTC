@@ -4,12 +4,14 @@ import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
+import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.media.projection.MediaProjection;
 import android.util.Log;
 import android.view.Surface;
 
+import org.json.JSONObject;
 import org.webrtc.DataChannel;
 
 import java.io.IOException;
@@ -24,40 +26,33 @@ public class ScreenRecorder extends Thread {
 
     private static final String TAG = "ScreenRecorder";
 
-    private int mWidth;
-    private int mHeight;
-    private int mBitRate;
-    private int mDpi;
+    public static int mWidth;
+    public static int mHeight;
+    public static int mBitRate;
+    public static int mDpi;
     private MediaProjection mMediaProjection;
     // parameters for the encoder
-    private static final String MIME_TYPE = "video/avc"; // H.264 Advanced Video Coding
-    private static final int FRAME_RATE = 30; // 30 fps
-    private static final int IFRAME_INTERVAL = 10; // 10 seconds between I-frames
-    private static final int TIMEOUT_US = 10000;
+    public static final String MIME_TYPE = "video/avc"; // H.264 Advanced Video Coding
+    public static final int FRAME_RATE = 30; // 30 fps
+    public static final int IFRAME_INTERVAL = 10; // 10 seconds between I-frames
+    public static final int TIMEOUT_US = 10000;
 
     private MediaCodec mEncoder;
     private Surface mSurface;
     private AtomicBoolean mQuit = new AtomicBoolean(false);
-    private MediaCodec.BufferInfo mBufferInfo = new MediaCodec.BufferInfo();
+    public static  MediaCodec.BufferInfo mBufferInfo = new MediaCodec.BufferInfo();
     private VirtualDisplay mVirtualDisplay;
+    MediaFormat format;
 
-    public surfaceListener msurfaceListener;
 
-
-    interface surfaceListener{
-        void setSerface(Surface s);
-    }
-
-    public ScreenRecorder(surfaceListener sl, int width, int height, int bitrate, int dpi, MediaProjection mp) {
+    public ScreenRecorder( int width, int height, int bitrate, int dpi, MediaProjection mp) {
         super(TAG);
         mWidth = width;
         mHeight = height;
         mBitRate = bitrate;
         mDpi = dpi;
         mMediaProjection = mp;
-        msurfaceListener=sl;
 
-        msurfaceListener.setSerface(mSurface);
     }
 
 
@@ -117,7 +112,8 @@ public class ScreenRecorder extends Thread {
     public ByteBuffer encodeToVideoTrack(int index) {
         ByteBuffer encodedData = mEncoder.getOutputBuffer(index);
 
-        VideoViewService.getmInstance().client.wbc.send(new DataChannel.Buffer(encodedData,true));
+
+        VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(encodedData,false));
 
         Log.i("TAG","encodedData : " + encodedData);
 
@@ -150,7 +146,7 @@ public class ScreenRecorder extends Thread {
 
     private void prepareEncoder() throws IOException {
 
-        MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, mWidth, mHeight);
+         format = MediaFormat.createVideoFormat(MIME_TYPE, mWidth, mHeight);
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT,
                 MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
         format.setInteger(MediaFormat.KEY_BIT_RATE, mBitRate);

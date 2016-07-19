@@ -1,6 +1,7 @@
 package fr.pchab.androidrtc;
 
 import android.util.Log;
+import android.widget.VideoView;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -16,18 +17,17 @@ import org.webrtc.SessionDescription;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoSource;
 
-import java.nio.Buffer;
 import java.util.LinkedList;
 
 import fr.pchab.androidrtc.base.Global;
 
 //compile 'io.pristine:libjingle:11139@aar'
 //11139
-public class WebRtcClient {
+public class WebRtcClient  {
     private static WebRtcClient mInstance;
     Peer peer;
 
-    DataChannel wbc;
+    DataChannel dataChannel;
     /**
      * Send a message through the signaling server
      *
@@ -78,10 +78,8 @@ public class WebRtcClient {
 
     public static WebRtcClient getmInstance(){
         if(mInstance!=null) {
-//            Log.i(Global.TAG , "NOT NULL");
             return mInstance;
         }else {
-//            Log.i(Global.TAG , "NULL");
             return null;
         }
     }
@@ -144,19 +142,15 @@ public class WebRtcClient {
                     Log.i(Global.TAG , "Totopic : " + Global.ToTopic);
                     new CreateAnswerCommand().execute(json);
 
-//                Log.i(Global.TAG , "OFFER : " + json.getString("sdp"));
 
 
                 }else if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("answer")){
                     //CALLER
                     new SetRemoteSDPCommand().execute(json);
 
-//                Log.i(Global.TAG , "answer : " + json.getString("sdp"));
-                }else if (!json.isNull("type") && json.getString("type").equalsIgnoreCase("candidate")){
+                 }else if (!json.isNull("type") && json.getString("type").equalsIgnoreCase("candidate")){
                     //CALLEE
                     new AddIceCandidateCommand().execute(json);
-
-//                Log.i(Global.TAG , "candidate : " + json.getString("candidate"));
 
 
                 }
@@ -208,6 +202,7 @@ public class WebRtcClient {
          }
          throw new RuntimeException("Failed to open capturer");
     }
+
 
     /**
      * Implement this interface to be notified of events.
@@ -305,36 +300,9 @@ public class WebRtcClient {
 
     }
 
-    public void createDatachannel(){
-
-        wbc = peer.pc.createDataChannel("myDataChannel",new DataChannel.Init());
-        Log.i(Global.TAG_,"create data channel state " +  wbc.state());
-
-        wbc.registerObserver(new DataChannel.Observer() {
-            @Override
-            public void onBufferedAmountChange(long l) {
-                Log.i(Global.TAG_,"onBufferedAmountChange "  );
-
-            }
-
-            @Override
-            public void onStateChange() {
-                Log.i(Global.TAG_,"onStateChange"  );
-                Log.i(Global.TAG_,"data channel state " +  wbc.state());
-
-            }
-
-            @Override
-            public void onMessage(DataChannel.Buffer buffer) {
-                Log.i(Global.TAG_,"receive buffer : " + buffer.data);
-            }
-        });
 
 
-
-    }
-
-    private class Peer implements SdpObserver, PeerConnection.Observer {
+    private class Peer implements SdpObserver, PeerConnection.Observer  {
         private PeerConnection pc;
         private String id;
 
@@ -342,7 +310,15 @@ public class WebRtcClient {
             this.pc = factory.createPeerConnection(iceServers, pcConstraints, this);
             pc.addStream(localMS); //, new MediaConstraints()
 
+            // DataChannel 의 Label 과 init 객체의 id가 같아야 한다
             mListener.onStatusChanged("CONNECTING");
+            DataChannel.Init da = new DataChannel.Init();
+            da.id = 1;
+
+            dataChannel = this.pc.createDataChannel("1",da);
+            dataChannel.registerObserver(ScreenDecoder.getInstance());
+
+
         }
 
         @Override
@@ -364,9 +340,6 @@ public class WebRtcClient {
 
                 pc.setLocalDescription(Peer.this, sdp);
 
-                createDatachannel();
-
-//                start gathering candidates
             } catch (JSONException e) {
                 e.printStackTrace();
                 Log.i(Global.TAG,"Sdp Send Fail");
@@ -434,6 +407,7 @@ public class WebRtcClient {
             Log.d(Global.TAG,"onAddStream "+mediaStream.label());
             // remote streams are displayed from 1 to MAX_PEER (0 is localStream)
              mListener.onAddRemoteStream(mediaStream);
+
         }
 
         @Override
@@ -445,13 +419,13 @@ public class WebRtcClient {
 
         @Override
         public void onDataChannel(DataChannel dataChannel) {
+            Log.d(Global.TAG_,"dataChannel : " + dataChannel.state());
         }
 
         @Override
         public void onRenegotiationNeeded() {
 
         }
-
 
 
     }
@@ -466,5 +440,6 @@ public class WebRtcClient {
     void reCall(){
         peer.pc = factory.createPeerConnection(iceServers, pcConstraints, peer);
     }
+
 
 }

@@ -15,6 +15,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.webrtc.DataChannel;
 
 import fr.pchab.androidrtc.base.Global;
 
@@ -193,14 +194,6 @@ public class ServiceMqtt extends Service  implements MqttCallback {
         void getMessage(String msg);
 
     }
-
-
-
-
-
-
-
-
 
 
 

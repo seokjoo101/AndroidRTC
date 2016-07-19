@@ -23,7 +23,6 @@ android {
 dependencies {
 
     compile 'com.android.support:appcompat-v7:22.0.0'
-    compile project(':webrtc-client')
 
     compile 'io.pristine:libjingle:11139@aar'
 

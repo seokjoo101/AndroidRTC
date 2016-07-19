@@ -17,17 +17,22 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.webrtc.DataChannel;
 import org.webrtc.MediaStream;
 import org.webrtc.RendererCommon;
 import org.webrtc.VideoRenderer;
 import org.webrtc.VideoRendererGui;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import fr.pchab.androidrtc.base.Global;
 import fr.pchab.androidrtc.base.WindowTouchView;
 
-public class VideoViewService extends Service implements WindowTouchView,WebRtcClient.RtcListener{
+public class VideoViewService extends Service implements WindowTouchView,WebRtcClient.RtcListener  {
 
     private final static int VIDEO_CALL_SENT = 666;
     private static final String VIDEO_CODEC_VP8 = "VP8";
@@ -67,9 +72,10 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
 
     private Handler mHandler;
 
+
     private static VideoViewService mInstance;
 
-    public  static VideoViewService getmInstance(){
+    public  static VideoViewService getInstance(){
         if(mInstance!=null)
             return mInstance;
         else
@@ -202,6 +208,8 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
                 LOCAL_WIDTH_CONNECTED, LOCAL_HEIGHT_CONNECTED,
                 scalingType,true);
 
+
+
     }
 
     @Override
@@ -246,6 +254,7 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
             Toast.makeText(getApplicationContext(), mText, Toast.LENGTH_SHORT).show();
         }
     }
+
 
 
  }

@@ -4,8 +4,16 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.SurfaceTexture;
+import android.media.MediaCodec;
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
+import android.opengl.GLES10;
+import android.opengl.GLES11Ext;
+import android.opengl.GLES20;
+import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -21,11 +29,16 @@ import android.widget.Toast;
 import org.webrtc.DataChannel;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.opengles.GL10;
 
 import butterknife.BindView;
 import fr.pchab.androidrtc.base.Global;
 
-public class RtcActivity extends Activity  implements ScreenRecorder.surfaceListener {
+public class RtcActivity extends Activity implements ScreenDecoder.setSurfaceListener  {
     Intent mqttServiceIntent=null;
     Intent videoServiceIntent=null;
     EditText to;
@@ -40,27 +53,43 @@ public class RtcActivity extends Activity  implements ScreenRecorder.surfaceList
 
     VideoViewService videoViewService;
 
+    private boolean mUpdateST = false;
+    private int[] hTex;
+
     private MediaProjectionManager mMediaProjectionManager;
     private static final int REQUEST_CODE = 1;
     private ScreenRecorder mRecorder;
 
+
+    Surface surface;
+    ScreenDecoder screenDecoder;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.main);
 
+
         videoViewService=new VideoViewService();
 
         from=(EditText)findViewById(R.id.from);
         to=(EditText)findViewById(R.id.to);
-        videoView=(SurfaceView)findViewById(R.id.screendisplay);
-
         bFromsend=(Button)findViewById(R.id.fromsend);
         bTosend=(Button) findViewById(R.id.tosend);
         ringoff=(Button)findViewById(R.id.ringoff);
 
         mMediaProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+
+        screenDecoder= new ScreenDecoder(this);
+        videoView=(SurfaceView)findViewById(R.id.screendisplay);
+        surface = videoView.getHolder().getSurface();
+
+//        screenDecoder.init(surface)
+//        glvideoView=(GLSurfaceView) findViewById(R.id.screendisplay);
+//        glvideoView.setEGLContextClientVersion(2);
+//        glvideoView.setRenderer(this);
+//        glvideoView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+
 
         bFromsend.setOnClickListener(new View.OnClickListener() {
             //topic 으로 regit.(subscribe)
@@ -76,7 +105,7 @@ public class RtcActivity extends Activity  implements ScreenRecorder.surfaceList
             //상대 topic publish
             public void onClick(View v) {
                 Global.ToTopic = to.getText().toString();
-                VideoViewService.getmInstance().call();
+                VideoViewService.getInstance().call();
 
             }
         });
@@ -87,10 +116,10 @@ public class RtcActivity extends Activity  implements ScreenRecorder.surfaceList
             public void onClick(View view) {
 //                VideoViewService.getmInstance().ringOff();
 
-
                 if(mRecorder!=null) {
                     mRecorder.quit();
                     mRecorder = null;
+
                 }
                 else{
                     Intent captureIntent = mMediaProjectionManager.createScreenCaptureIntent();
@@ -101,6 +130,8 @@ public class RtcActivity extends Activity  implements ScreenRecorder.surfaceList
             }
         });
 
+
+
     }
 
     @Override
@@ -110,11 +141,12 @@ public class RtcActivity extends Activity  implements ScreenRecorder.surfaceList
             Log.e("@@", "media projection is null");
             return;
         }
+
         // video size
         final int width = 1280;
         final int height = 720;
          final int bitrate = 6000000;
-        mRecorder = new ScreenRecorder(this,width, height, bitrate, 1, mediaProjection);
+        mRecorder = new ScreenRecorder(width, height, bitrate, 1, mediaProjection);
         mRecorder.start();
         Toast.makeText(this, "Screen recorder is running...", Toast.LENGTH_SHORT).show();
 
@@ -172,7 +204,15 @@ public class RtcActivity extends Activity  implements ScreenRecorder.surfaceList
 
 
     @Override
-    public void setSerface(Surface s) {
-        s=videoView.getHolder().getSurface() ;
+    public void setSurface() {
+        screenDecoder.init(surface);
+        screenDecoder.start();
+        Log.e(Global.TAG_,"set");
     }
+
+//    glvideoView.requestRender();
+
+
+
+
 }
