@@ -212,6 +212,7 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
 
     }
 
+    //통화 종료 될때
     @Override
     public void onRemoveRemoteStream() {
         VideoRendererGui.update(localRender,
@@ -220,7 +221,7 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
                 scalingType,true);
 
         mHandler.post(new ToastRunnable("통화가 종료되었습니다"));
-
+        ScreenDecoder.getInstance().setDecoderListener.stopDecoder();
     }
 
     @Override
@@ -239,7 +240,7 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
 
 
     public void ringOff(){
-        client.removePeer();
+        client.removeConnection();
     }
 
     private class ToastRunnable implements Runnable {

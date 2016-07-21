@@ -130,12 +130,6 @@ public class ServiceMqtt extends Service  implements MqttCallback {
             MqttMessage message1= new MqttMessage(message.getBytes());
             sampleClient.getTopic(Global.ToTopic).publish(message1);
 
-
-
-
-
-
-
         }catch(MqttException me) {
             Log.i(Global.TAG,"reason "+me.getReasonCode());
             Log.i(Global.TAG,"msg "+me.getMessage());

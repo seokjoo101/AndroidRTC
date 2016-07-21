@@ -4,45 +4,44 @@ import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
-import android.media.MediaExtractor;
 import android.media.MediaFormat;
-import android.media.MediaMuxer;
 import android.media.projection.MediaProjection;
 import android.util.Log;
 import android.view.Surface;
 
-import org.json.JSONObject;
 import org.webrtc.DataChannel;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import fr.pchab.androidrtc.base.Global;
+import fr.pchab.androidrtc.base.VideoCodec;
+
 /**
  * Created by Seokjoo on 2016-07-18.
  */
-public class ScreenRecorder extends Thread {
+public class ScreenRecorder extends Thread implements VideoCodec{
+
+
 
 
     private static final String TAG = "ScreenRecorder";
+
 
     public static int mWidth;
     public static int mHeight;
     public static int mBitRate;
     public static int mDpi;
     private MediaProjection mMediaProjection;
-    // parameters for the encoder
-    public static final String MIME_TYPE = "video/avc"; // H.264 Advanced Video Coding
-    public static final int FRAME_RATE = 30; // 30 fps
-    public static final int IFRAME_INTERVAL = 10; // 10 seconds between I-frames
-    public static final int TIMEOUT_US = 10000;
 
     private MediaCodec mEncoder;
     private Surface mSurface;
     private AtomicBoolean mQuit = new AtomicBoolean(false);
-    public static  MediaCodec.BufferInfo mBufferInfo = new MediaCodec.BufferInfo();
+    public MediaCodec.BufferInfo mBufferInfo = new MediaCodec.BufferInfo();
     private VirtualDisplay mVirtualDisplay;
     MediaFormat format;
+
 
 
     public ScreenRecorder( int width, int height, int bitrate, int dpi, MediaProjection mp) {
@@ -52,8 +51,7 @@ public class ScreenRecorder extends Thread {
         mBitRate = bitrate;
         mDpi = dpi;
         mMediaProjection = mp;
-
-    }
+      }
 
 
     /**
@@ -65,6 +63,8 @@ public class ScreenRecorder extends Thread {
 
     @Override
     public void run() {
+        Log.d(TAG, "Screen recording running... " );
+
         try {
             try {
                 prepareEncoder();
@@ -108,15 +108,15 @@ public class ScreenRecorder extends Thread {
 
         }
     }
-
+    public ByteBuffer encodedData;
     public ByteBuffer encodeToVideoTrack(int index) {
-        ByteBuffer encodedData = mEncoder.getOutputBuffer(index);
+         encodedData = mEncoder.getOutputBuffer(index);
 
 
         VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(encodedData,false));
 
-        Log.i("TAG","encodedData : " + encodedData);
 
+        Log.i("TAG","encodedData : " + encodedData);
 
         if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
             // The codec config data was pulled out and fed to the muxer when we got
@@ -133,11 +133,13 @@ public class ScreenRecorder extends Thread {
                     + ", presentationTimeUs=" + mBufferInfo.presentationTimeUs
                     + ", offset=" + mBufferInfo.offset);
         }
+
         if (encodedData != null) {
             encodedData.position(mBufferInfo.offset);
             encodedData.limit(mBufferInfo.offset + mBufferInfo.size);
-             Log.i(TAG, "sent " + mBufferInfo.size + " bytes to muxer...");
+             Log.i(TAG, "sent : " + mBufferInfo.size + " bytes to muxer...  / time : " + mBufferInfo.presentationTimeUs);
         }
+
 
         return encodedData;
     }
@@ -173,6 +175,7 @@ public class ScreenRecorder extends Thread {
         if (mMediaProjection != null) {
             mMediaProjection.stop();
         }
+
     }
 
 }

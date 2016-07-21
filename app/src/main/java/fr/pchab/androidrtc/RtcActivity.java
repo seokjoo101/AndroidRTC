@@ -38,102 +38,81 @@ import javax.microedition.khronos.opengles.GL10;
 import butterknife.BindView;
 import fr.pchab.androidrtc.base.Global;
 
-public class RtcActivity extends Activity implements ScreenDecoder.setSurfaceListener  {
+public class RtcActivity extends Activity implements View.OnClickListener ,ScreenDecoder.setDecoderListener  {
     Intent mqttServiceIntent=null;
     Intent videoServiceIntent=null;
     EditText to;
     EditText from;
-    Button bFromsend;
-    Button bTosend;
 
     SurfaceView videoView;
 
-
-    Button ringoff;
-
     VideoViewService videoViewService;
 
-    private boolean mUpdateST = false;
-    private int[] hTex;
 
     private MediaProjectionManager mMediaProjectionManager;
     private static final int REQUEST_CODE = 1;
     private ScreenRecorder mRecorder;
-
+    private ScreenDecoder mDecorder;
 
     Surface surface;
-    ScreenDecoder screenDecoder;
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.main);
 
+        to=(EditText)findViewById(R.id.to);
+        from=(EditText)findViewById(R.id.from);
+
 
         videoViewService=new VideoViewService();
-
-        from=(EditText)findViewById(R.id.from);
-        to=(EditText)findViewById(R.id.to);
-        bFromsend=(Button)findViewById(R.id.fromsend);
-        bTosend=(Button) findViewById(R.id.tosend);
-        ringoff=(Button)findViewById(R.id.ringoff);
+        mDecorder= new ScreenDecoder(this);
 
         mMediaProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
-
-        screenDecoder= new ScreenDecoder(this);
         videoView=(SurfaceView)findViewById(R.id.screendisplay);
         surface = videoView.getHolder().getSurface();
 
-//        screenDecoder.init(surface)
-//        glvideoView=(GLSurfaceView) findViewById(R.id.screendisplay);
-//        glvideoView.setEGLContextClientVersion(2);
-//        glvideoView.setRenderer(this);
-//        glvideoView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
-
-        bFromsend.setOnClickListener(new View.OnClickListener() {
-            //topic 으로 regit.(subscribe)
-            public void onClick(View v) {
-                subscribe_topic(from.getText().toString());
-                startVideoService();
-             }
-        });
-
-
-        bTosend.setOnClickListener(new View.OnClickListener() {
-
-            //상대 topic publish
-            public void onClick(View v) {
-                Global.ToTopic = to.getText().toString();
-                VideoViewService.getInstance().call();
-
-            }
-        });
-
-
-        ringoff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-//                VideoViewService.getmInstance().ringOff();
-
-                if(mRecorder!=null) {
-                    mRecorder.quit();
-                    mRecorder = null;
-
-                }
-                else{
-                    Intent captureIntent = mMediaProjectionManager.createScreenCaptureIntent();
-                    startActivityForResult(captureIntent, REQUEST_CODE);
-
-                }
-
-            }
-        });
-
-
+        findViewById(R.id.fromsend).setOnClickListener(this);
+        findViewById(R.id.tosend).setOnClickListener(this);
+        findViewById(R.id.record).setOnClickListener(this);
+        findViewById(R.id.ringoff).setOnClickListener(this);
 
     }
 
+    @Override
+    public void onClick(View view) {
+        int id=view.getId();
+
+        if(id==R.id.fromsend){
+            subscribe_topic(from.getText().toString());
+            startVideoService();
+        }
+        else if(id==R.id.tosend){
+            Global.ToTopic = to.getText().toString();
+            VideoViewService.getInstance().call();
+        }
+        else if(id==R.id.record){
+            //                VideoViewService.getmInstance().ringOff();
+
+            if(mRecorder!=null) {
+                mRecorder.quit();
+                mRecorder = null;
+
+            }
+            else{
+                Intent captureIntent = mMediaProjectionManager.createScreenCaptureIntent();
+                startActivityForResult(captureIntent, REQUEST_CODE);
+
+            }
+        }
+        else if(id==R.id.ringoff){
+            VideoViewService.getInstance().ringOff();
+         }
+
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         MediaProjection mediaProjection = mMediaProjectionManager.getMediaProjection(resultCode, data);
@@ -142,11 +121,7 @@ public class RtcActivity extends Activity implements ScreenDecoder.setSurfaceLis
             return;
         }
 
-        // video size
-        final int width = 1280;
-        final int height = 720;
-         final int bitrate = 6000000;
-        mRecorder = new ScreenRecorder(width, height, bitrate, 1, mediaProjection);
+         mRecorder = new ScreenRecorder(Global.width, Global.height, Global.bitrate, 1, mediaProjection);
         mRecorder.start();
         Toast.makeText(this, "Screen recorder is running...", Toast.LENGTH_SHORT).show();
 
@@ -204,15 +179,27 @@ public class RtcActivity extends Activity implements ScreenDecoder.setSurfaceLis
 
 
     @Override
-    public void setSurface() {
-        screenDecoder.init(surface);
-        screenDecoder.start();
-        Log.e(Global.TAG_,"set");
+    public void startDecoder() {
+
+        if(mDecorder==null)
+            mDecorder= new ScreenDecoder(this);
+
+        mDecorder.init(surface);
+        mDecorder.start();
+        Log.e(Global.TAG_,"startDecoder");
+
     }
 
-//    glvideoView.requestRender();
+    @Override
+    public void stopDecoder() {
 
+        if(mDecorder!=null) {
+            mDecorder.quit();
+            mDecorder = null;
+            Log.e(Global.TAG_,"stopDecoder");
+        }
 
+    }
 
 
 }

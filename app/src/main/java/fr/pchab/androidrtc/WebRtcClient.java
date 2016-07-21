@@ -142,14 +142,12 @@ public class WebRtcClient  {
                     Log.i(Global.TAG , "Totopic : " + Global.ToTopic);
                     new CreateAnswerCommand().execute(json);
 
-
-
                 }else if(!json.isNull("type") && json.getString("type").equalsIgnoreCase("answer")){
                     //CALLER
                     new SetRemoteSDPCommand().execute(json);
 
                  }else if (!json.isNull("type") && json.getString("type").equalsIgnoreCase("candidate")){
-                    //CALLEE
+                    //CALLEE , CALLER
                     new AddIceCandidateCommand().execute(json);
 
 
@@ -230,9 +228,10 @@ public class WebRtcClient  {
 
             //Caller 다시 전화걸때 재연결
             if (peer.pc.iceConnectionState() == PeerConnection.IceConnectionState.CLOSED){
-                peer.pc = factory.createPeerConnection(iceServers, pcConstraints, peer);
-                peer. pc.addStream(localMS);
-             }
+
+                reconnect();
+
+            }
             peer.pc.createOffer(peer, pcConstraints);
 
         }
@@ -245,8 +244,7 @@ public class WebRtcClient  {
 
             //Calle 다시 전화걸때 재연결
             if(peer.pc.iceConnectionState() == PeerConnection.IceConnectionState.CLOSED) {
-                peer.pc = factory.createPeerConnection(iceServers, pcConstraints, peer);
-                peer.pc.addStream(localMS);
+                reconnect();
             }
 
             SessionDescription sdp = new SessionDescription(
@@ -314,7 +312,6 @@ public class WebRtcClient  {
             mListener.onStatusChanged("CONNECTING");
             DataChannel.Init da = new DataChannel.Init();
             da.id = 1;
-
             dataChannel = this.pc.createDataChannel("1",da);
             dataChannel.registerObserver(ScreenDecoder.getInstance());
 
@@ -369,7 +366,7 @@ public class WebRtcClient  {
             Log.d(Global.TAG,"onIceConnectionChange :" + iceConnectionState);
 
             if(iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED) {
-                removePeer();
+                removeConnection();
                 mListener.onStatusChanged("통화 종료");
             }
         }
@@ -430,9 +427,19 @@ public class WebRtcClient  {
 
     }
 
-    public void removePeer() {
-        peer.pc.close();
+    private void reconnect() {
+        peer.pc = factory.createPeerConnection(iceServers, pcConstraints, peer);
+        peer. pc.addStream(localMS);
 
+        DataChannel.Init da = new DataChannel.Init();
+        da.id = 1;
+        dataChannel = peer.pc.createDataChannel("1",da);
+        dataChannel.registerObserver(ScreenDecoder.getInstance());
+
+    }
+
+    public void removeConnection() {
+        peer.pc.close();
         mListener.onRemoveRemoteStream();
         mListener.onStatusChanged("통화 종료");
     }
