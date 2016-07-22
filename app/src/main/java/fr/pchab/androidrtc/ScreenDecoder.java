@@ -30,7 +30,7 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
 
     boolean IsRun;
     ByteBuffer byteBuffer;
-
+    boolean isInput = true;
     boolean configured = false;
     private static ScreenDecoder minstance;
 
@@ -42,9 +42,7 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
     }
 
 
-    void setRun(boolean running){
-        eosReceived = running;
-    }
+
 
 
     ScreenDecoder(setDecoderListener  decoderListener){
@@ -56,15 +54,13 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
     public boolean init(Surface surface,ByteBuffer buffer) {
 
 
-
+        eosReceived = false;
         try {
-            if (configured) {
-                throw new IllegalStateException("Decoder is already configured");
-            }
+
                 MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, width, height);
-                format.setByteBuffer("bytebuffer",buffer);
+                format.setByteBuffer("buffer",buffer);
                 mDecoder = MediaCodec.createDecoderByType(MIME_TYPE);
-                Log.i(Global.TAG_, "format : " + format);
+                Log.e(Global.TAG_, "format : " + format);
                 mDecoder.configure(format, surface, null, 0 /* Decoder */);
                 mDecoder.start();
                 configured=true;
@@ -106,10 +102,15 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
         try {
             MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
 
-            while (!eosReceived ) {
+            boolean first = false;
+            long startWhen = 0;
+
+
+
+                while (!eosReceived ) {
                     if(configured) {
-                        int outIndex = mDecoder.dequeueOutputBuffer(info, TIMEOUT_US);
-                        Log.i(Global.TAG_, "outIndex : " + outIndex);
+                        int outIndex = mDecoder.dequeueOutputBuffer(info, 10000);
+                        Log.e(Global.TAG_, "outIndex : " + outIndex);
 
                         if (outIndex >= 0) {
                             mDecoder.releaseOutputBuffer(outIndex, true /* Surface init */);
@@ -127,7 +128,7 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
 
         }
         finally {
-            if(configured&& mDecoder!=null){
+            if(isInput){
 
                 mDecoder.stop();
                 mDecoder.release();
