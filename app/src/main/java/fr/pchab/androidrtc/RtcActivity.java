@@ -37,8 +37,9 @@ import javax.microedition.khronos.opengles.GL10;
 
 import butterknife.BindView;
 import fr.pchab.androidrtc.base.Global;
+import fr.pchab.androidrtc.base.VideoCodec;
 
-public class RtcActivity extends Activity implements View.OnClickListener ,ScreenDecoder.setDecoderListener  {
+public class RtcActivity extends Activity implements View.OnClickListener ,ScreenDecoder.setDecoderListener , VideoCodec {
     Intent mqttServiceIntent=null;
     Intent videoServiceIntent=null;
     EditText to;
@@ -121,7 +122,8 @@ public class RtcActivity extends Activity implements View.OnClickListener ,Scree
             return;
         }
 
-         mRecorder = new ScreenRecorder(Global.width, Global.height, Global.bitrate, 1, mediaProjection);
+        mRecorder = new MyEncoder(width, height, bitrate, 1, mediaProjection);
+        mDecorder.start();
         mRecorder.start();
         Toast.makeText(this, "Screen recorder is running...", Toast.LENGTH_SHORT).show();
 
@@ -184,7 +186,7 @@ public class RtcActivity extends Activity implements View.OnClickListener ,Scree
         if(mDecorder==null)
             mDecorder= new ScreenDecoder(this);
 
-        mDecorder.init(surface);
+//        mDecorder.init(surface);
         mDecorder.start();
         Log.e(Global.TAG_,"startDecoder");
 
@@ -194,12 +196,48 @@ public class RtcActivity extends Activity implements View.OnClickListener ,Scree
     public void stopDecoder() {
 
         if(mDecorder!=null) {
-            mDecorder.quit();
+//            mDecorder.quit();
             mDecorder = null;
             Log.e(Global.TAG_,"stopDecoder");
         }
 
     }
+    class MyEncoder extends ScreenRecorder {
+        byte[] mBuffer = new byte[0];
+        public MyEncoder(int width, int height, int bitrate, int dpi, MediaProjection mp) {
+            super(width, height, bitrate, dpi, mp);
+        }
 
 
-}
+        protected void onEncodedSample(MediaCodec.BufferInfo info, ByteBuffer data) {
+            // Here we could have just used ByteBuffer, but in real life case we might need to
+            // send sample over network, etc. This requires byte[]
+            if (mBuffer.length < info.size) {
+                mBuffer = new byte[info.size];
+            }
+            data.position(info.offset);
+            data.limit(info.offset + info.size);
+            data.get(mBuffer, 0, info.size);
+
+            if ((info.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
+                // this is the first and only config sample, which contains information about codec
+                // like H.264, that let's configure the decoder
+                mDecorder.configure(videoView.getHolder().getSurface(),
+                        width,
+                        height,
+                        mBuffer,
+                        0,
+                        info.size);
+            } else {
+                // pass byte[] to decoder's queue to render asap
+                mDecorder.decodeSample(mBuffer,
+                        0,
+                        info.size,
+                        info.presentationTimeUs,
+                         info.flags);
+            }
+        }
+        }
+
+    }
+

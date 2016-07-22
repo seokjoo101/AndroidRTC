@@ -9,6 +9,8 @@ import android.media.projection.MediaProjection;
 import android.util.Log;
 import android.view.Surface;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.webrtc.DataChannel;
 
 import java.io.IOException;
@@ -103,20 +105,30 @@ public class ScreenRecorder extends Thread implements VideoCodec{
 
                 encodeToVideoTrack(index);
 
-                mEncoder.releaseOutputBuffer(index, false);
             }
 
         }
     }
+
+    protected void onEncodedSample(MediaCodec.BufferInfo info, ByteBuffer data) {
+    }
+
     public ByteBuffer encodedData;
     public ByteBuffer encodeToVideoTrack(int index) {
          encodedData = mEncoder.getOutputBuffer(index);
+        if (encodedData != null) {
+            final int endOfStream = mBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM;
+            // pass to whoever listens to
+            if (endOfStream == 0) onEncodedSample(mBufferInfo, encodedData);
+            // releasing buffer is important
+            mEncoder.releaseOutputBuffer(index, false);
+            if (endOfStream == MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+        }
+
+//        VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(encodedData,false));
 
 
-        VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(encodedData,false));
-
-
-        Log.i("TAG","encodedData : " + encodedData);
+        Log.i("TAG","info FLAG : " + mBufferInfo.flags);
 
         if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
             // The codec config data was pulled out and fed to the muxer when we got
@@ -140,6 +152,7 @@ public class ScreenRecorder extends Thread implements VideoCodec{
              Log.i(TAG, "sent : " + mBufferInfo.size + " bytes to muxer...  / time : " + mBufferInfo.presentationTimeUs);
         }
 
+//        VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(encodedData,false));
 
         return encodedData;
     }

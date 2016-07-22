@@ -149,8 +149,6 @@ public class WebRtcClient  {
                  }else if (!json.isNull("type") && json.getString("type").equalsIgnoreCase("candidate")){
                     //CALLEE , CALLER
                     new AddIceCandidateCommand().execute(json);
-
-
                 }
             }
         } catch (JSONException e) {
