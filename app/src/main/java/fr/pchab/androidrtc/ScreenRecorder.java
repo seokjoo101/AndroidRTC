@@ -9,6 +9,8 @@ import android.media.projection.MediaProjection;
 import android.util.Log;
 import android.view.Surface;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.webrtc.DataChannel;
 
 import java.io.IOException;
@@ -102,18 +104,33 @@ public class ScreenRecorder extends Thread implements VideoCodec{
             } else if (index >= 0) {
 
                 encodeToVideoTrack(index);
-
                 mEncoder.releaseOutputBuffer(index, false);
+
             }
 
         }
     }
     public ByteBuffer encodedData;
+    byte[] mBuffer = new byte[0];
+
     public ByteBuffer encodeToVideoTrack(int index) {
          encodedData = mEncoder.getOutputBuffer(index);
 
+        if (encodedData != null) {
+            final int endOfStream = mBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM;
+            // pass to whoever listens to
+            if (endOfStream == 0) {
 
-        VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(encodedData,false));
+                if (mBuffer.length < mBufferInfo.size) {
+                    mBuffer = new byte[mBufferInfo.size];
+                }
+                encodedData.position(mBufferInfo.offset);
+                encodedData.limit(mBufferInfo.offset + mBufferInfo.size);
+                encodedData.get(mBuffer, 0, mBufferInfo.size);
+            }
+        }
+
+         VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(ByteBuffer.wrap(mBuffer, 0, mBufferInfo.size),false));
 
 
         Log.i("TAG","encodedData : " + encodedData);
@@ -140,6 +157,7 @@ public class ScreenRecorder extends Thread implements VideoCodec{
              Log.i(TAG, "sent : " + mBufferInfo.size + " bytes to muxer...  / time : " + mBufferInfo.presentationTimeUs);
         }
 
+//        VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(encodedData,false));
 
         return encodedData;
     }

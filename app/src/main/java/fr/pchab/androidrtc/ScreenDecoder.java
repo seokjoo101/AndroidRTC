@@ -57,10 +57,12 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
         try {
 
                 MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, width, height);
+                format.setByteBuffer("bytebuffer",byteBuffer);
                 mDecoder = MediaCodec.createDecoderByType(MIME_TYPE);
                 Log.e(Global.TAG_, "format : " + format);
                 mDecoder.configure(format, surface, null, 0 /* Decoder */);
                 mDecoder.start();
+                this.start();
 
 
         } catch (IOException e) {
@@ -71,93 +73,63 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
         return true;
     }
 
+    boolean isInput = true;
 
     @Override
     public void run() {
 
-        MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-        ByteBuffer[] inputBuffers = mDecoder.getInputBuffers();
-        mDecoder.getOutputBuffers();
+        try {
+            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
 
-        boolean isInput = true;
-        boolean first = false;
-        long startWhen = 0;
+            boolean first = false;
+            long startWhen = 0;
 
-        while (!eosReceived) {
+            while (!eosReceived) {
 
-            if (isInput) {
+                if (isInput) {
 //                dequeueInputBuffer를 통해 현재 사용 가능한 index를 받아 온다.
-                int inputIndex = mDecoder.dequeueInputBuffer(TIMEOUT_US);
+                    int inputIndex = mDecoder.dequeueInputBuffer(TIMEOUT_US);
 
-                if (inputIndex >= 0) {
-                    //해당 index에 접근하여 실제 Byte를 사용
-                    ByteBuffer inputBuffer = mDecoder.getInputBuffer(inputIndex);
+                    if (inputIndex >= 0) {
+                        //해당 index에 접근하여 실제 Byte를 사용
+                        ByteBuffer inputBuffer = mDecoder.getInputBuffer(inputIndex);
 
-//                    ByteBuffer inputBuffer = inputBuffers[inputIndex];
+//                     inputBuffer.clear();
 
-                    inputBuffer.clear();
-                    inputBuffer.put(byteBuffer);
-
-                    byte[] b = new byte[byteBuffer.remaining()];
-                    byteBuffer.get(b);
+                        if (inputBuffer != null)
+                            inputBuffer.put(byteBuffer);
 
 
-                    mDecoder.queueInputBuffer(inputIndex, 0, 1000 ,5000000, 0);
-                    Log.i(Global.TAG_, "byteBuffer : "+ byteBuffer);
-                    Log.i(Global.TAG_, "byte array length  : "+ b.length);
+                        mDecoder.queueInputBuffer(inputIndex, 0, 100000, 10000000, 0);
+                        Log.i(Global.TAG_, "byteBuffer : " + byteBuffer);
+                    }
+                }
+
+                int outIndex = mDecoder.dequeueOutputBuffer(info, 10000);
+                Log.e(Global.TAG_, "outIndex : " + outIndex);
+
+                if (outIndex >= 0) {
+                    mDecoder.releaseOutputBuffer(outIndex, true /* Surface init */);
+                    if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
+                        break;
+                    }
+                } else {
+                    try {
+                        Thread.sleep(10);
+                    } catch (InterruptedException ignore) {
+                    }
                 }
             }
+        }
+        finally {
+            if(isInput){
 
-            int outIndex = mDecoder.dequeueOutputBuffer(info, 10000);
-            Log.e(Global.TAG_, "outIndex : "+ outIndex);
+                mDecoder.stop();
+                mDecoder.release();
 
-            switch (outIndex) {
-                case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
-                    Log.e(Global.TAG_, "INFO_OUTPUT_BUFFERS_CHANGED");
-                    mDecoder.getOutputBuffers();
-                    break;
-
-                case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
-                    Log.e(Global.TAG_, "INFO_OUTPUT_FORMAT_CHANGED format : " + mDecoder.getOutputFormat());
-                    break;
-
-                case MediaCodec.INFO_TRY_AGAIN_LATER:
-			    	Log.e(Global.TAG_, "INFO_TRY_AGAIN_LATER");
-                    break;
-
-                default:
-                    if (!first) {
-                        startWhen = System.currentTimeMillis();
-                        first = true;
-                    }
-                    try {
-                        long sleepTime = (info.presentationTimeUs / 1000) - (System.currentTimeMillis() - startWhen);
-                        Log.d(Global.TAG_, "info.presentationTimeUs : " + (info.presentationTimeUs / 1000) + " playTime: " + (System.currentTimeMillis() - startWhen) + " sleepTime : " + sleepTime);
-
-                        if (sleepTime > 0)
-                            Thread.sleep(sleepTime);
-                    } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-
-                    mDecoder.releaseOutputBuffer(outIndex, true /* Surface init */);
-
-                    break;
-            }
-
-            // All decoded frames have been rendered, we can stop playing now
-            if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-                Log.e(Global.TAG_, "OutputBuffer BUFFER_FLAG_END_OF_STREAM");
-                break;
             }
         }
 
-        if (mDecoder != null) {
-            mDecoder.stop();
-            mDecoder.release();
-
-        }
 
     }
 
@@ -182,14 +154,16 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
 
     @Override
     public void onMessage(DataChannel.Buffer buffer) {
-//        Log.i(Global.TAG_,"receive buffer : " + buffer.data);
+        Log.i(Global.TAG_,"receive buffer : " + buffer.data);
+
+        byteBuffer=buffer.data;
 
         if(!IsRun){
             setDecoderListener.startDecoder();
             IsRun=true;
         }
 
-        byteBuffer=buffer.data;
+
 
      }
 

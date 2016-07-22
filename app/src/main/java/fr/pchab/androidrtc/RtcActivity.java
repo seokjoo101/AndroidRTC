@@ -37,8 +37,9 @@ import javax.microedition.khronos.opengles.GL10;
 
 import butterknife.BindView;
 import fr.pchab.androidrtc.base.Global;
+import fr.pchab.androidrtc.base.VideoCodec;
 
-public class RtcActivity extends Activity implements View.OnClickListener ,ScreenDecoder.setDecoderListener  {
+public class RtcActivity extends Activity implements View.OnClickListener ,ScreenDecoder.setDecoderListener , VideoCodec {
     Intent mqttServiceIntent=null;
     Intent videoServiceIntent=null;
     EditText to;
@@ -121,7 +122,7 @@ public class RtcActivity extends Activity implements View.OnClickListener ,Scree
             return;
         }
 
-         mRecorder = new ScreenRecorder(Global.width, Global.height, Global.bitrate, 1, mediaProjection);
+          mRecorder = new ScreenRecorder(width, height, bitrate, 1, mediaProjection);
         mRecorder.start();
         Toast.makeText(this, "Screen recorder is running...", Toast.LENGTH_SHORT).show();
 
@@ -185,8 +186,7 @@ public class RtcActivity extends Activity implements View.OnClickListener ,Scree
             mDecorder= new ScreenDecoder(this);
 
         mDecorder.init(surface);
-        mDecorder.start();
-        Log.e(Global.TAG_,"startDecoder");
+         Log.e(Global.TAG_,"startDecoder");
 
     }
 

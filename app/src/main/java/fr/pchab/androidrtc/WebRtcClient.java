@@ -28,6 +28,8 @@ public class WebRtcClient  {
     Peer peer;
 
     DataChannel dataChannel;
+
+
     /**
      * Send a message through the signaling server
      *
@@ -149,8 +151,6 @@ public class WebRtcClient  {
                  }else if (!json.isNull("type") && json.getString("type").equalsIgnoreCase("candidate")){
                     //CALLEE , CALLER
                     new AddIceCandidateCommand().execute(json);
-
-
                 }
             }
         } catch (JSONException e) {
@@ -310,11 +310,11 @@ public class WebRtcClient  {
 
             // DataChannel 의 Label 과 init 객체의 id가 같아야 한다
             mListener.onStatusChanged("CONNECTING");
+
             DataChannel.Init da = new DataChannel.Init();
             da.id = 1;
             dataChannel = this.pc.createDataChannel("1",da);
             dataChannel.registerObserver(ScreenDecoder.getInstance());
-
 
         }
 
@@ -332,6 +332,7 @@ public class WebRtcClient  {
 
 
 
+                //OFFER 혹은 ANSWER 성공적으로 만들어 졌을 때
                 Log.i(Global.TAG,"sdp.type.canonicalForm()  : "+ sdp.type.canonicalForm());
                 sendMessage(Global.ToTopic, sdp.type.canonicalForm(), payload);
 
