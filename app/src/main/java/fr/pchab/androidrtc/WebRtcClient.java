@@ -133,7 +133,7 @@ public class WebRtcClient  {
     synchronized public void getMessage(String msg){
         JSONObject json = null;
 
-        Log.e(Global.TAG, "getMessage: " + peer.pc.iceConnectionState());
+        Log.i(Global.TAG, "getMessage: " + peer.pc.iceConnectionState());
         try {
             json = new JSONObject(msg);
 

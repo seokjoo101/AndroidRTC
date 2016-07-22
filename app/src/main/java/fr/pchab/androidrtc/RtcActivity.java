@@ -180,13 +180,16 @@ public class RtcActivity extends Activity implements View.OnClickListener ,Scree
 
 
     @Override
-    public void startDecoder() {
+    public void startDecoder(ByteBuffer buffer) {
 
         if(mDecorder==null)
             mDecorder= new ScreenDecoder(this);
 
-        mDecorder.init(surface);
-         Log.e(Global.TAG_,"startDecoder");
+        mDecorder.setRun(true);
+        mDecorder.start();
+
+        mDecorder.init(surface,buffer);
+        Log.e(Global.TAG_,"startDecoder");
 
     }
 
