@@ -11,7 +11,7 @@ public interface VideoCodec {
     int bitrate =6000000;
 
     // parameters for codec
-    String MIME_TYPE = "video/avc"; // H.264 Advanced Video Coding
+    String MIME_TYPE = "video/3gpp"; // H.264 Advanced Video Coding
     int FRAME_RATE = 30; // 30 fps
     int IFRAME_INTERVAL = 10; // 10 seconds between I-frames
     int TIMEOUT_US = 10000;

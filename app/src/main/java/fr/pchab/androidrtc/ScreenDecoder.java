@@ -65,6 +65,7 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
                 mDecoder.start();
                 configured=true;
 
+            this.start();
       } catch (IOException e) {
             e.printStackTrace();
             Log.e(Global.TAG_,"Init exception : " + e);

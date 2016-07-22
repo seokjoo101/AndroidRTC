@@ -186,7 +186,7 @@ public class RtcActivity extends Activity implements View.OnClickListener ,Scree
             mDecorder= new ScreenDecoder(this);
 
         mDecorder.init(surface,buffer);
-        mDecorder.start();
+//        mDecorder.start();
          Log.e(Global.TAG_,"startDecoder");
 
     }
