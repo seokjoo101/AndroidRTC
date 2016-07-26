@@ -51,14 +51,14 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
         IsRun=false;
     }
 
-    public boolean init(Surface surface,ByteBuffer buffer) {
+    public boolean init(Surface surface,ByteBuffer csd0) {
 
 
         eosReceived = false;
         try {
 
                 MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, width, height);
-                format.setByteBuffer("buffer",buffer);
+                    format.setByteBuffer("csd-0",csd0);
                 mDecoder = MediaCodec.createDecoderByType(MIME_TYPE);
                 Log.e(Global.TAG_, "format : " + format);
                 mDecoder.configure(format, surface, null, 0 /* Decoder */);
@@ -85,7 +85,6 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
                 //해당 index에 접근하여 실제 Byte를 사용
                 ByteBuffer inputBuffer = mDecoder.getInputBuffer(inputIndex);
 
-//                     inputBuffer.clear();
 
                 if (inputBuffer != null)
                     inputBuffer.put(buffer);

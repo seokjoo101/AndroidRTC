@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
@@ -82,6 +83,7 @@ public class RtcActivity extends Activity implements View.OnClickListener ,Scree
         findViewById(R.id.ringoff).setOnClickListener(this);
 
     }
+
 
     @Override
     public void onClick(View view) {
@@ -186,8 +188,7 @@ public class RtcActivity extends Activity implements View.OnClickListener ,Scree
             mDecorder= new ScreenDecoder(this);
 
         mDecorder.init(surface,buffer);
-//        mDecorder.start();
-         Log.e(Global.TAG_,"startDecoder");
+          Log.e(Global.TAG_,"startDecoder");
 
     }
 

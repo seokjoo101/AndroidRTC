@@ -65,7 +65,7 @@ public class WebRtcClient  {
 
 
         PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
-                false);
+                true);
         factory = new PeerConnectionFactory();
 
 

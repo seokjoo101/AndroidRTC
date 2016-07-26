@@ -184,6 +184,7 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
     @Override
     public void onStatusChanged(String newStatus) {
         Log.i(Global.TAG, "state : "+ newStatus);
+
     }
 
     @Override
