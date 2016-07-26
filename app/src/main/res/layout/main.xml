@@ -10,66 +10,9 @@
         android:id="@+id/screendisplay"
         android:layout_width="match_parent"
         android:layout_gravity="center"
-        android:layout_height="400dp"
+        android:layout_height="match_parent"
         />
 
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:orientation="horizontal"
-            android:gravity="center"
-            >
-
-
-        <EditText
-            android:id="@+id/from"
-            android:layout_width="70dp"
-            android:layout_height="wrap_content"
-            android:hint="From"/>
-        <Button
-            android:id="@+id/fromsend"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Regit"/>
-
-
-            <EditText
-                android:id="@+id/to"
-                android:layout_width="70dp"
-                android:layout_height="wrap_content"
-                android:hint="To"/>
-
-            <Button
-                android:id="@+id/tosend"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Call"/>
-
-
-
-            </LinearLayout>
-
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:orientation="horizontal"
-        android:gravity="center"
-        >
-
-        <Button
-            android:id="@+id/record"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="record"
-            />
-        <Button
-            android:id="@+id/ringoff"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ring off"
-            />
-
-    </LinearLayout>
 
 
 </LinearLayout>

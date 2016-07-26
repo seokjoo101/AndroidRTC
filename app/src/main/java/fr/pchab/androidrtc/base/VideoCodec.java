@@ -6,8 +6,8 @@ package fr.pchab.androidrtc.base;
 public interface VideoCodec {
 
     // video size
-    int width =1280;
-    int height =720;
+    int width =720;
+    int height =1280;
     int bitrate =4000000;
 
     // parameters for codec

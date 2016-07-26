@@ -57,10 +57,10 @@ public class WebRtcClient  {
     private RtcListener mListener;
 
 
-    public WebRtcClient(RtcListener listener, PeerConnectionParameters params) {
+    public WebRtcClient(RtcListener listener ) {
         mInstance = this;
         mListener = listener;
-        pcParams = params;
+//        pcParams = params;
 
 
 
@@ -158,7 +158,7 @@ public class WebRtcClient  {
         }
     }
 
-    private void setCamera(){
+    private void setCamera(){/*
         localMS = factory.createLocalMediaStream("ARDAMS");
         if(pcParams.videoCallEnabled){
             MediaConstraints videoConstraints = new MediaConstraints();
@@ -174,32 +174,13 @@ public class WebRtcClient  {
         AudioSource audioSource = factory.createAudioSource(new MediaConstraints());
         localMS.addTrack(factory.createAudioTrack("ARDAMSa0", audioSource));
 
-        mListener.onLocalStream(localMS);
+        mListener.onLocalStream(localMS);*/
 
         peer = new Peer();
 
 
     }
 
-     private VideoCapturer getVideoCapturer() {
-         String[] cameraFacing = { "front", "back" };
-         int[] cameraIndex = { 0, 1 };
-         int[] cameraOrientation = { 0, 90, 180, 270 };
-         for (String facing : cameraFacing) {
-             for (int index : cameraIndex) {
-                 for (int orientation : cameraOrientation) {
-                     String name = "Camera " + index + ", Facing " + facing
-                             + ", Orientation " + orientation;
-                     VideoCapturer capturer = VideoCapturer.create(name);
-                     if (capturer != null) {
-                         Log.i(Global.TAG,"Using camera: " + name);
-                         return capturer;
-                     }
-                 }
-             }
-         }
-         throw new RuntimeException("Failed to open capturer");
-    }
 
 
     /**
@@ -306,7 +287,7 @@ public class WebRtcClient  {
 
         public Peer() {
             this.pc = factory.createPeerConnection(iceServers, pcConstraints, this);
-            pc.addStream(localMS); //, new MediaConstraints()
+//            pc.addStream(localMS); //, new MediaConstraints()
 
             // DataChannel 의 Label 과 init 객체의 id가 같아야 한다
             mListener.onStatusChanged("CONNECTING");
@@ -404,7 +385,7 @@ public class WebRtcClient  {
         public void onAddStream(MediaStream mediaStream) {
             Log.d(Global.TAG,"onAddStream "+mediaStream.label());
             // remote streams are displayed from 1 to MAX_PEER (0 is localStream)
-             mListener.onAddRemoteStream(mediaStream);
+//             mListener.onAddRemoteStream(mediaStream);
 
         }
 

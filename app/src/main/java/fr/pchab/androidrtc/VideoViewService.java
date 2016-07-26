@@ -32,7 +32,7 @@ import butterknife.ButterKnife;
 import fr.pchab.androidrtc.base.Global;
 import fr.pchab.androidrtc.base.WindowTouchView;
 
-public class VideoViewService extends Service implements WindowTouchView,WebRtcClient.RtcListener  {
+public class VideoViewService extends Service implements  WebRtcClient.RtcListener  {
 
     private final static int VIDEO_CALL_SENT = 666;
     private static final String VIDEO_CODEC_VP8 = "VP8";
@@ -57,7 +57,6 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
 
 
     private View windowView;
-    private WindowManager windowManager;
     private WindowManager.LayoutParams windowViewLayoutParams;
     private WindowTouchPresenter windowTouchPresenter;
 
@@ -67,8 +66,8 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
     private VideoRenderer.Callbacks remoteRender;
     public WebRtcClient client;
 
-    @BindView(R.id.glview_call)
-    GLSurfaceView vsv;
+  /*  @BindView(R.id.glview_call)
+    GLSurfaceView vsv;*/
 
     private Handler mHandler;
 
@@ -82,9 +81,6 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
             return null;
     }
 
-    public VideoViewService() {
-
-    }
 
     @Override
     public void onCreate() {
@@ -94,15 +90,16 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
 
         mInstance=this;
 
-        windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+       /* windowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         initWindowLayout((LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE));
         windowTouchPresenter = new WindowTouchPresenter(this);
 
-        ButterKnife.bind(this, windowView);
+        ButterKnife.bind(this, windowView);*/
 
 
+        init();
 
-        vsv.setPreserveEGLContextOnPause(true);
+        /*vsv.setPreserveEGLContextOnPause(true);
         vsv.setKeepScreenOn(true);
 
 
@@ -112,14 +109,14 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
                 init();
             }
         });
-
+*/
         // local and remote render
-        remoteRender = VideoRendererGui.create(
+/*        remoteRender = VideoRendererGui.create(
                 REMOTE_X, REMOTE_Y,
                 REMOTE_WIDTH, REMOTE_HEIGHT, scalingType, false);
         localRender = VideoRendererGui.create(
                 LOCAL_X_CONNECTING, LOCAL_Y_CONNECTING,
-                LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING, scalingType, true);
+                LOCAL_WIDTH_CONNECTING, LOCAL_HEIGHT_CONNECTING, scalingType, true);*/
 
 
 
@@ -127,13 +124,8 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
 
 
     private void init() {
-        Point displaySize = new Point();
-        windowManager.getDefaultDisplay().getSize(displaySize);
 
-        PeerConnectionParameters params = new PeerConnectionParameters(
-                true, false, displaySize.x, displaySize.y, 30, 1, VIDEO_CODEC_VP8, true, 1, AUDIO_CODEC_OPUS, true);
-
-        client = new WebRtcClient(this, params );
+        client = new WebRtcClient(this  );
 
         startCam();
     }
@@ -142,16 +134,6 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
     public IBinder onBind(Intent intent) {
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    @Override
-    public void updateViewLayout(int x, int y) {
-        if (windowViewLayoutParams != null) {
-            windowViewLayoutParams.x += x;
-            windowViewLayoutParams.y += y;
-
-            windowManager.updateViewLayout(windowView, windowViewLayoutParams);
-        }
     }
 
 
@@ -164,21 +146,6 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
     };
 
 
-    /**
-     * Window View 를 초기화 한다. X, Y 좌표는 0, 0으로 지정한다.
-     */
-    private void initWindowLayout(LayoutInflater layoutInflater) {
-        windowView = layoutInflater.inflate(R.layout.windowview, null);
-        windowViewLayoutParams = new WindowManager.LayoutParams(
-                WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT,
-                30, 30, // X, Y 좌표
-                WindowManager.LayoutParams.TYPE_TOAST,
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-                PixelFormat.TRANSLUCENT);
-        windowViewLayoutParams.gravity = Gravity.TOP | Gravity.START;
-        windowManager.addView(windowView, windowViewLayoutParams);
-        windowView.setOnTouchListener(touchListener);
-    }
 
 
     @Override
@@ -236,7 +203,7 @@ public class VideoViewService extends Service implements WindowTouchView,WebRtcC
     }
 
     public  void call(){
-        client.call(Global.ToTopic);
+         client.call(Global.ToTopic);
     }
 
 

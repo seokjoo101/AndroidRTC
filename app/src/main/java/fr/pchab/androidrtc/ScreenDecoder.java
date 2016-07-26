@@ -1,7 +1,10 @@
 package fr.pchab.androidrtc;
 
+import android.content.Intent;
+import android.graphics.Point;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Surface;
 
@@ -30,6 +33,7 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
 
     boolean IsRun;
     ByteBuffer byteBuffer;
+    ByteBuffer csd0;
     boolean isInput = true;
     boolean configured = false;
     private static ScreenDecoder minstance;
@@ -51,13 +55,13 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
         IsRun=false;
     }
 
-    public boolean init(Surface surface,ByteBuffer csd0) {
+    public boolean init(Surface surface) {
 
 
         eosReceived = false;
         try {
 
-                MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, width, height);
+            MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, width, height);
                     format.setByteBuffer("csd-0",csd0);
                 mDecoder = MediaCodec.createDecoderByType(MIME_TYPE);
                 Log.e(Global.TAG_, "format : " + format);
@@ -65,7 +69,7 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
                 mDecoder.start();
                 configured=true;
 
-            this.start();
+             this.start();
       } catch (IOException e) {
             e.printStackTrace();
             Log.e(Global.TAG_,"Init exception : " + e);
@@ -110,7 +114,7 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
                 while (!eosReceived ) {
                     if(configured) {
                         int outIndex = mDecoder.dequeueOutputBuffer(info, 10000);
-                        Log.e(Global.TAG_, "outIndex : " + outIndex);
+                        Log.i(Global.TAG_, "outIndex : " + outIndex);
 
                         if (outIndex >= 0) {
                             mDecoder.releaseOutputBuffer(outIndex, true /* Surface init */);
@@ -160,12 +164,14 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
 
     @Override
     public void onMessage(DataChannel.Buffer buffer) {
-//        Log.i(Global.TAG_,"receive buffer : " + buffer.data);
+        Log.d(Global.TAG_,"receive buffer : " + buffer.data);
         byteBuffer=buffer.data;
 
         if(!IsRun){
-            setDecoderListener.startDecoder(byteBuffer);
+            csd0=byteBuffer;
+            setDecoderListener.startDecoder( );
             IsRun=true;
+
         }
 
 
@@ -175,7 +181,7 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
      }
 
     interface setDecoderListener{
-        void startDecoder(ByteBuffer buffer);
+        void startDecoder( );
         void stopDecoder();
 
     }
