@@ -1,11 +1,14 @@
 package fr.pchab.androidrtc;
 
+import android.content.Intent;
 import android.hardware.display.DisplayManager;
 import android.hardware.display.VirtualDisplay;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.projection.MediaProjection;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 import android.view.Surface;
 
@@ -90,7 +93,13 @@ public class ScreenRecorder extends Thread implements VideoCodec{
 
     private void recordVirtualDisplay() {
         while (!mQuit.get()) {
+            Log.d(TAG, "1got buffer, info: size=" + mBufferInfo.size
+                    + ", presentationTimeUs=" + mBufferInfo.presentationTimeUs
+                    + ", offset=" + mBufferInfo.offset);
             int index = mEncoder.dequeueOutputBuffer(mBufferInfo, TIMEOUT_US);
+            Log.d(TAG, "2got buffer, info: size=" + mBufferInfo.size
+                    + ", presentationTimeUs=" + mBufferInfo.presentationTimeUs
+                    + ", offset=" + mBufferInfo.offset);
             Log.i(TAG, "dequeue output buffer index=" + index);
             if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
 
@@ -130,10 +139,11 @@ public class ScreenRecorder extends Thread implements VideoCodec{
             }
         }
 
-         VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(ByteBuffer.wrap(mBuffer, 0, mBufferInfo.size),false));
+         VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(ByteBuffer.wrap(mBuffer, 0, mBufferInfo.size),true));
 
+        Log.i("Encoding","encodedData : " + encodedData);
+        Log.i("Encoding","encodedData : " + mBufferInfo.size);
 
-        Log.i("TAG","encodedData : " + encodedData);
 
         if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
             // The codec config data was pulled out and fed to the muxer when we got
@@ -161,6 +171,8 @@ public class ScreenRecorder extends Thread implements VideoCodec{
 
         return encodedData;
     }
+
+
 
 
 
@@ -193,6 +205,7 @@ public class ScreenRecorder extends Thread implements VideoCodec{
         if (mMediaProjection != null) {
             mMediaProjection.stop();
         }
+
 
     }
 

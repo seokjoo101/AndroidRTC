@@ -1,5 +1,6 @@
 package fr.pchab.androidrtc;
 
+import android.app.Service;
 import android.util.Log;
 import android.widget.VideoView;
 
@@ -14,6 +15,8 @@ import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
+import org.webrtc.StatsObserver;
+import org.webrtc.StatsReport;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoSource;
 
@@ -50,19 +53,13 @@ public class WebRtcClient  {
     JSONObject message = new JSONObject();
     private PeerConnectionFactory factory;
     private LinkedList<PeerConnection.IceServer> iceServers = new LinkedList<>();
-    private PeerConnectionParameters pcParams;
     private MediaConstraints pcConstraints = new MediaConstraints();
-    private MediaStream localMS;
-    private VideoSource videoSource;
     private RtcListener mListener;
 
 
     public WebRtcClient(RtcListener listener ) {
         mInstance = this;
         mListener = listener;
-//        pcParams = params;
-
-
 
         PeerConnectionFactory.initializeAndroidGlobals(listener, true, true,
                 true);
@@ -100,34 +97,23 @@ public class WebRtcClient  {
         }
     }
 
-    /**
-     * Call this method in Activity.onPause()
-     */
-    public void onPause() {
-        if(videoSource != null) videoSource.stop();
-    }
-
-    /**
-     * Call this method in Activity.onResume()
-     */
-    public void onResume() {
-        if(videoSource != null) videoSource.restart();
-    }
 
     /**
      * Call this method in Activity.onDestroy()
      */
+
     public void onDestroy() {
 
         peer.pc.dispose();
-        videoSource.dispose();
-        factory.dispose();
+         factory.dispose();
     }
 
 
     public void start(){
-        setCamera();
-     }
+
+        peer = new Peer();
+
+    }
 
 
     synchronized public void getMessage(String msg){
@@ -158,29 +144,6 @@ public class WebRtcClient  {
         }
     }
 
-    private void setCamera(){/*
-        localMS = factory.createLocalMediaStream("ARDAMS");
-        if(pcParams.videoCallEnabled){
-            MediaConstraints videoConstraints = new MediaConstraints();
-            videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(pcParams.videoHeight)));
-            videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(pcParams.videoWidth)));
-            videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(pcParams.videoFps)));
-            videoConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(pcParams.videoFps)));
-
-            videoSource = factory.createVideoSource(getVideoCapturer(), videoConstraints);
-            localMS.addTrack(factory.createVideoTrack("ARDAMSv0", videoSource));
-        }
-
-        AudioSource audioSource = factory.createAudioSource(new MediaConstraints());
-        localMS.addTrack(factory.createAudioTrack("ARDAMSa0", audioSource));
-
-        mListener.onLocalStream(localMS);*/
-
-        peer = new Peer();
-
-
-    }
-
 
 
     /**
@@ -189,10 +152,6 @@ public class WebRtcClient  {
     public interface RtcListener{
 
         void onStatusChanged(String newStatus);
-
-        void onLocalStream(MediaStream localStream);
-
-        void onAddRemoteStream(MediaStream remoteStream);
 
         void onRemoveRemoteStream();
 
@@ -287,16 +246,21 @@ public class WebRtcClient  {
 
         public Peer() {
             this.pc = factory.createPeerConnection(iceServers, pcConstraints, this);
-//            pc.addStream(localMS); //, new MediaConstraints()
 
             // DataChannel 의 Label 과 init 객체의 id가 같아야 한다
-            mListener.onStatusChanged("CONNECTING");
+            mListener.onStatusChanged("Mqtt connect : " + ServiceMqtt.getInstance().sampleClient.isConnected());
 
             DataChannel.Init da = new DataChannel.Init();
             da.id = 1;
+//            da.ordered=false;
             dataChannel = this.pc.createDataChannel("1",da);
             dataChannel.registerObserver(ScreenDecoder.getInstance());
 
+            Log.i(Global.TAG," ordered : " + da.ordered); // true
+            Log.i(Global.TAG," negotiated : " + da.negotiated); //false
+            Log.i(Global.TAG," protocol : " + da.protocol); // null
+            Log.i(Global.TAG," maxRetransmits : " + da.maxRetransmits); //-1
+            Log.i(Global.TAG," maxRetransmitTimeMs : " + da.maxRetransmitTimeMs); //-1
         }
 
         @Override
@@ -304,8 +268,8 @@ public class WebRtcClient  {
             // TODO: modify sdp to use pcParams prefered codecs
             try {
                 JSONObject payload = new JSONObject();
-                payload.put("type", sdp.type.canonicalForm());
-                payload.put("sdp", sdp.description);
+                payload.put("type", sdp.type.canonicalForm());payload.put("sdp", sdp.description);
+
 
                 if(sdp.type.canonicalForm().equalsIgnoreCase("offer")){
                     payload.put("answerTopic",Global.Mytopic);
@@ -350,6 +314,10 @@ public class WebRtcClient  {
             if(iceConnectionState == PeerConnection.IceConnectionState.DISCONNECTED) {
                 removeConnection();
                 mListener.onStatusChanged("통화 종료");
+            }else if (iceConnectionState == PeerConnection.IceConnectionState.CONNECTED){
+                //WebRTC peerconnection 성공했을 때
+                mListener.onStatusChanged("연결 성공");
+
             }
         }
 
@@ -398,7 +366,7 @@ public class WebRtcClient  {
 
         @Override
         public void onDataChannel(DataChannel dataChannel) {
-            Log.d(Global.TAG_,"dataChannel : " + dataChannel.state());
+            Log.d(Global.TAG,"dataChannel : " + dataChannel.state());
         }
 
         @Override
@@ -411,7 +379,7 @@ public class WebRtcClient  {
 
     private void reconnect() {
         peer.pc = factory.createPeerConnection(iceServers, pcConstraints, peer);
-        peer. pc.addStream(localMS);
+
 
         DataChannel.Init da = new DataChannel.Init();
         da.id = 1;
@@ -424,11 +392,31 @@ public class WebRtcClient  {
         peer.pc.close();
         mListener.onRemoveRemoteStream();
         mListener.onStatusChanged("통화 종료");
+
+
     }
 
     void reCall(){
         peer.pc = factory.createPeerConnection(iceServers, pcConstraints, peer);
     }
 
+    public void getStat(){
+
+        peer.pc.getStats(new StatsObserver() {
+            @Override
+            public void onComplete(StatsReport[] statsReports) {
+
+                for(StatsReport stats : statsReports) {
+                    for (StatsReport.Value  s : stats.values){
+                        Log.i(Global.TAG,"stats : "+ s.name + ", value : " + s.value );
+
+                    }
+                }
+                Log.i(Global.TAG,"--------------------------------------------------------------------------------------------------------------------------------------------" );
+
+            }
+        },null);
+
+    }
 
 }

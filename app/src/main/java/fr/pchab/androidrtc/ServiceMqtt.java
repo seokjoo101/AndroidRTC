@@ -72,6 +72,14 @@ public class ServiceMqtt extends Service  implements MqttCallback {
     }
 
     @Override
+    public void onDestroy(){
+
+
+    }
+
+
+
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
 

@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.SurfaceTexture;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
@@ -49,8 +50,7 @@ public class RtcActivity extends Activity implements   VideoCodec {
 
 
 
-    private ScreenDecoder mDecorder;
-    Surface surface;
+     Surface surface;
 
 
     @Override
@@ -69,21 +69,28 @@ public class RtcActivity extends Activity implements   VideoCodec {
 
         Handler hd = new Handler();
 
-        hd.postDelayed(new splashhandler() , 1000);
-
-
-
+        hd.post(new surfaceHandler());
      }
 
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        // 세로 전환시
+        if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            Log.i(Global.TAG,"세로");
+        }
+        // 가로 전환시
+        else if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            Log.i(Global.TAG,"가로");
+        }
+     }
 
-    private class splashhandler implements Runnable{
+    private class surfaceHandler implements Runnable{
         public void run() {
             ScreenDecoder.getInstance().init(surface);
 
+
         }
     }
-
-
-
 
 }
