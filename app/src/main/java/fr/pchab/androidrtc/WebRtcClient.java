@@ -1,6 +1,7 @@
 package fr.pchab.androidrtc;
 
 import android.app.Service;
+import android.content.ContentResolver;
 import android.util.Log;
 import android.widget.VideoView;
 
@@ -48,7 +49,9 @@ public class WebRtcClient  {
 
     /*Callee
     Answer to - 상대방전화번호 , "answer" , sdp.description
-    Candidate to - 상대방전화번호 ,"candidate ", candidate*/
+    Candidate to - 상대방전화번호 ,"candidate ", candidate
+
+    */
 
     JSONObject message = new JSONObject();
     private PeerConnectionFactory factory;
@@ -85,7 +88,6 @@ public class WebRtcClient  {
 
     public void sendMessage(String to, String type, JSONObject payload) throws JSONException {
         ServiceMqtt.getInstance().publish(Global.ToTopic,payload.toString());
-
 //        Log.d(Global.TAG,payload.toString());
     }
 

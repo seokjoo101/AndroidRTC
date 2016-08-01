@@ -4,6 +4,7 @@ import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
 import android.view.Surface;
@@ -30,6 +31,7 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
 
     boolean IsRun;
     ByteBuffer byteBuffer;
+
     ByteBuffer csd0;
     boolean isInput = true;
     boolean configured = false;
@@ -70,7 +72,7 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
                 configured=true;
 
              this.start();
-      } catch (IOException e) {
+       } catch (IOException e) {
             e.printStackTrace();
             Log.e(Global.TAG_,"Init exception : " + e);
         }
@@ -80,7 +82,7 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
 
 
 
-    void decode(ByteBuffer buffer){
+    void decode( ){
         if (configured) {
 //                dequeueInputBuffer를 통해 현재 사용 가능한 index를 받아 온다.
             int inputIndex = mDecoder.dequeueInputBuffer(TIMEOUT_US);
@@ -91,15 +93,20 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
                 //해당 index에 접근하여 실제 Byte를 사용
                 ByteBuffer inputBuffer = mDecoder.getInputBuffer(inputIndex);
 
-                if (inputBuffer != null){
-                    inputBuffer.put(buffer);
-                    mDecoder.queueInputBuffer(inputIndex, 0, 100000, 10000000, 0);
 
-                    Log.i(Global.TAG_,"info size : "+info.size);
-                    Log.i(Global.TAG_,"info presentationtime : "+info.presentationTimeUs);
+                if (inputBuffer != null){
+
+                   inputBuffer.put(byteBuffer);
+
+
+                    Log.i(Global.TAG_,"decoding   : " + byteBuffer);
+
+                    mDecoder.queueInputBuffer(inputIndex, 0, byteBuffer.limit(), 10000000, 0);
+
                 }
 
             }
+
         }
     }
 
@@ -110,36 +117,34 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
         try {
 
 
-                while (!eosReceived ) {
+                while (!eosReceived )
+                {
+
                     if(configured) {
-                        int outIndex = mDecoder.dequeueOutputBuffer(info, 10000);
+                        int outIndex = mDecoder.dequeueOutputBuffer(info, TIMEOUT_US);
 //                        Log.i(Global.TAG_, "outIndex : " + outIndex);
-                        if (outIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+
+                        if (outIndex >= 0) {
 
 
-                        }
-                        else if (outIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
-                            try {
-                                // wait 10ms
-                                Thread.sleep(10);
-                            } catch (InterruptedException e) {
-                            }
-                        }
-                        else if (outIndex >= 0) {
-
-
-                            Log.i(Global.TAG_,"info size "+info.size);
-                            Log.i(Global.TAG_,"info time "+info.presentationTimeUs);
+/*                            Log.i(Global.TAG_,"info size "+info.size);
+                            Log.i(Global.TAG_,"info time "+info.presentationTimeUs);*/
 
                             mDecoder.releaseOutputBuffer(outIndex, true /* Surface init */);
                             if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
                                 break;
                             }
                         }
+
+                        else {
+                            try {
+                                // wait 10ms
+                                Thread.sleep(10);
+                            } catch (InterruptedException e) {
+                            }
+                        }
                     }
                 }
-
-
         }
         finally {
             if(configured){
@@ -185,20 +190,37 @@ public class ScreenDecoder extends Thread implements DataChannel.Observer ,Video
         }
     }
 
-
+    byte[] mBuffer = new byte[0];
     @Override
     public void onMessage(DataChannel.Buffer buffer) {
-//        Log.d(Global.TAG_,"receive buffer : " + buffer.data);
+
         byteBuffer=buffer.data;
+        Log.d(Global.TAG_,"received   : " + byteBuffer);
+
+        if (mBuffer.length < byteBuffer.limit()) {
+            mBuffer = new byte[byteBuffer.limit()];
+        }
+        byteBuffer.position(0);
+        byteBuffer.limit(0 + byteBuffer.limit());
+        byteBuffer.get(mBuffer, 0, byteBuffer.limit());
+
+
+        byteBuffer=ByteBuffer.wrap(mBuffer, 0, byteBuffer.limit());
+        decode();
+
+
+
+
 
         if(!IsRun){
             csd0=byteBuffer;
             setDecoderListener.startDecoder( );
             IsRun=true;
+
         }
 
 
-        decode(byteBuffer);
+
 
     }
 

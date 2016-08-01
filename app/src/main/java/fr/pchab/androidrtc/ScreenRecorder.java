@@ -113,7 +113,6 @@ public class ScreenRecorder extends Thread implements VideoCodec{
             } else if (index >= 0) {
 
                 encodeToVideoTrack(index);
-                mEncoder.releaseOutputBuffer(index, false);
 
             }
 
@@ -130,42 +129,31 @@ public class ScreenRecorder extends Thread implements VideoCodec{
             // pass to whoever listens to
             if (endOfStream == 0) {
 
-                if (mBuffer.length < mBufferInfo.size) {
+/*                if (mBuffer.length < mBufferInfo.size) {
                     mBuffer = new byte[mBufferInfo.size];
                 }
                 encodedData.position(mBufferInfo.offset);
                 encodedData.limit(mBufferInfo.offset + mBufferInfo.size);
                 encodedData.get(mBuffer, 0, mBufferInfo.size);
+
+                VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(ByteBuffer.wrap(mBuffer, 0, mBufferInfo.size), false));*/
+
+//                VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(encodedData,false));
+                VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(encodedData,true));
             }
+            mEncoder.releaseOutputBuffer(index, false);
+            if (endOfStream == MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+
+
         }
 
-         VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(ByteBuffer.wrap(mBuffer, 0, mBufferInfo.size),true));
 
         Log.i("Encoding","encodedData : " + encodedData);
-        Log.i("Encoding","encodedData : " + mBufferInfo.size);
+        Log.i("Encoding","info size : " + mBufferInfo.size);
+        Log.i("Encoding","info offset : " + mBufferInfo.offset);
+        Log.i("Encoding","info time : " + mBufferInfo.presentationTimeUs);
 
 
-        if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG) != 0) {
-            // The codec config data was pulled out and fed to the muxer when we got
-            // the INFO_OUTPUT_FORMAT_CHANGED status.
-            // Ignore it.
-            Log.d(TAG, "ignoring BUFFER_FLAG_CODEC_CONFIG");
-            mBufferInfo.size = 0;
-        }
-        if (mBufferInfo.size == 0) {
-            Log.d(TAG, "info.size == 0, drop it.");
-            encodedData = null;
-        } else {
-            Log.d(TAG, "got buffer, info: size=" + mBufferInfo.size
-                    + ", presentationTimeUs=" + mBufferInfo.presentationTimeUs
-                    + ", offset=" + mBufferInfo.offset);
-        }
-
-        if (encodedData != null) {
-            encodedData.position(mBufferInfo.offset);
-            encodedData.limit(mBufferInfo.offset + mBufferInfo.size);
-             Log.i(TAG, "sent : " + mBufferInfo.size + " bytes to muxer...  / time : " + mBufferInfo.presentationTimeUs);
-        }
 
 //        VideoViewService.getInstance().client.dataChannel.send(new DataChannel.Buffer(encodedData,false));
 
